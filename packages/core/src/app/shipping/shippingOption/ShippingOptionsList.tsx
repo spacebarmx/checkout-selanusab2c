@@ -16,7 +16,7 @@ const ShippingOptionListItem: FunctionComponent<ShippingOptionListItemProps> = (
     consignmentId,
     shippingOption,
 }) => {
-    const renderLabel:any = useCallback(
+    const renderLabel = useCallback(
         () => (
             <div className="shippingOptionLabel">
                 <StaticShippingOption displayAdditionalInformation={true} method={shippingOption} />
@@ -28,7 +28,7 @@ const ShippingOptionListItem: FunctionComponent<ShippingOptionListItemProps> = (
     return (
       <ChecklistItem
         htmlId={`shippingOptionRadio-${consignmentId}-${shippingOption.id}`}
-        label={ renderLabel === 'Free Shipping' ? 'Envío gratis' : renderLabel }
+        label={renderLabel}
         value={shippingOption.id}
       />
     );

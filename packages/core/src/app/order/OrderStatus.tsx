@@ -26,66 +26,74 @@ const OrderStatus: FunctionComponent<OrderStatusProps> = ({
     const paymentsWithMandates = order.payments?.filter(isPaymentWithMandate) || [];
 
     return (
-        <OrderConfirmationSection>
-            {order.orderId && (
-                <p data-test="order-confirmation-order-number-text">
-                    <TranslatedHtml
-                        data={{ orderNumber: order.orderId }}
-                        id="order_confirmation.order_number_text"
-                    />
-                </p>
-            )}
+      <OrderConfirmationSection>
+        {order.orderId && (
+          <p data-test="order-confirmation-order-number-text">
+            <TranslatedHtml
+              data={{ orderNumber: order.orderId }}
+              id="order_confirmation.order_number_text"
+            />
+          </p>
+        )}
 
-            <p data-test="order-confirmation-order-status-text">
-                <OrderStatusMessage
-                    orderNumber={order.orderId}
-                    orderStatus={order.status}
-                    supportEmail={supportEmail}
-                    supportPhoneNumber={supportPhoneNumber}
+        <p data-test="order-confirmation-order-status-text">
+          <OrderStatusMessage
+            orderNumber={order.orderId}
+            orderStatus={order.status}
+            supportEmail={supportEmail}
+            supportPhoneNumber={supportPhoneNumber}
+          />
+        </p>
+        {paymentsWithMandates.map((payment) => {
+          if (payment.mandate.url) {
+            return (
+              <a
+                data-test="order-confirmation-mandate-link-text"
+                href={payment.mandate.url}
+                key={`${payment.providerId}-${payment.methodId}-mandate`}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <TranslatedString
+                  id={`order_confirmation.mandate.${payment.providerId}.${payment.methodId}`}
                 />
-            </p>
-            {paymentsWithMandates.map((payment) => {
-                if (payment.mandate.url) {
-                    return (
-                        <a
-                            data-test="order-confirmation-mandate-link-text"
-                            href={payment.mandate.url}
-                            key={`${payment.providerId}-${payment.methodId}-mandate`}
-                            rel="noopener noreferrer"
-                            target="_blank"
-                        >
-                            <TranslatedString
-                                id={`order_confirmation.mandate.${payment.providerId}.${payment.methodId}`}
-                            />
-                        </a>
-                    );
-                } else if (payment.mandate.id) {
-                    return (
-                        <p
-                            data-test="order-confirmation-mandate-id-text"
-                            key={`${payment.providerId}-${payment.methodId}-mandate`}
-                        >
-                            <TranslatedString
-                                data={{ mandate: payment.mandate.id }}
-                                id={`order_confirmation.mandate.${payment.providerId}.${payment.methodId}`}
-                            />
-                        </p>
-                    );
-                }
-            })}
+              </a>
+            );
+          } else if (payment.mandate.id) {
+            return (
+              <p
+                data-test="order-confirmation-mandate-id-text"
+                key={`${payment.providerId}-${payment.methodId}-mandate`}
+              >
+                <TranslatedString
+                  data={{ mandate: payment.mandate.id }}
+                  id={`order_confirmation.mandate.${payment.providerId}.${payment.methodId}`}
+                />
+              </p>
+            );
+          }
+        })}
 
-            {order.hasDigitalItems && (
-                <p data-test="order-confirmation-digital-items-text">
-                    <TranslatedHtml
-                        id={
-                            order.isDownloadable
-                                ? 'order_confirmation.order_with_downloadable_digital_items_text'
-                                : 'order_confirmation.order_without_downloadable_digital_items_text'
-                        }
-                    />
-                </p>
-            )}
-        </OrderConfirmationSection>
+        {order.hasDigitalItems && (
+          <p data-test="order-confirmation-digital-items-text">
+            <TranslatedHtml
+              id={
+                order.isDownloadable
+                  ? 'order_confirmation.order_with_downloadable_digital_items_text'
+                  : 'order_confirmation.order_without_downloadable_digital_items_text'
+              }
+            />
+          </p>
+        )}
+
+        <p>
+          Para solicitar factura dar clic{' '}
+          <a href="https://blog.selanusa.com.mx/factura" rel="noreferrer" target="_blank">
+            <b>aquí</b>
+          </a>
+        </p>
+        
+      </OrderConfirmationSection>
     );
 };
 

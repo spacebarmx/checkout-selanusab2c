@@ -33,6 +33,8 @@ export interface PaymentFormProps {
     isUsingMultiShipping?: boolean;
     isStoreCreditApplied: boolean;
     methods: PaymentMethod[];
+    setRequireBill: any;
+    requireBill: boolean;
     selectedMethod?: PaymentMethod;
     shouldShowStoreCredit?: boolean;
     shouldDisableSubmit?: boolean;
@@ -62,6 +64,8 @@ const PaymentForm: FunctionComponent<
     isUsingMultiShipping,
     language,
     methods,
+    requireBill,
+    setRequireBill,
     onMethodSelect,
     onStoreCreditChange,
     onUnhandledError,
@@ -115,6 +119,23 @@ const PaymentForm: FunctionComponent<
 
     return (
         <Form className="checkout-form" testId="payment-form">
+            <fieldset className='fieldSetFacturar'>
+                <legend className='legendFacturar'>¿Deseas facturar?</legend>
+
+                <div className='FacturarDiv'>
+                    <label className='facturarText'>Si</label>
+                    <input           
+                        checked={requireBill}
+                        id="requireBill"
+                        name="requireBill"
+                        onChange={()=>{
+                            setRequireBill(!requireBill)
+                        }}
+                        type="checkbox"
+                    />
+                </div>
+
+            </fieldset>
             {usableStoreCredit > 0 && (
                 <StoreCreditField
                     availableStoreCredit={availableStoreCredit}

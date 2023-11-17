@@ -9,15 +9,15 @@ import { Formik } from 'formik';
 import { noop } from 'lodash';
 import React, { FunctionComponent } from 'react';
 
-import {
-    HostedFieldPaymentMethodComponent,
-    HostedFieldPaymentMethodComponentProps
-} from '@bigcommerce/checkout/hosted-field-integration';
 import { createLocaleContext, LocaleContext, LocaleContextType } from '@bigcommerce/checkout/locale';
-import { getPaymentMethod, getStoreConfig } from '@bigcommerce/checkout/test-utils';
+import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
 
-import { CheckoutProvider } from '../../checkout';
+import { getStoreConfig } from '../../config/config.mock';
+import { getPaymentMethod } from '../payment-methods.mock';
 
+import HostedFieldPaymentMethod, {
+    HostedFieldPaymentMethodProps,
+} from './HostedFieldPaymentMethod';
 import { default as PaymentMethodComponent, PaymentMethodProps } from './PaymentMethod';
 import PaymentMethodId from './PaymentMethodId';
 
@@ -59,8 +59,8 @@ describe('when using Square payment', () => {
 
     it('renders as hosted field method', () => {
         const container = mount(<PaymentMethodTest {...defaultProps} method={method} />);
-        const component: ReactWrapper<HostedFieldPaymentMethodComponentProps> =
-            container.find(HostedFieldPaymentMethodComponent);
+        const component: ReactWrapper<HostedFieldPaymentMethodProps> =
+            container.find(HostedFieldPaymentMethod);
 
         expect(component.props()).toEqual(
             expect.objectContaining({
@@ -76,8 +76,8 @@ describe('when using Square payment', () => {
 
     it('initializes method with required config', () => {
         const container = mount(<PaymentMethodTest {...defaultProps} method={method} />);
-        const component: ReactWrapper<HostedFieldPaymentMethodComponentProps> =
-            container.find(HostedFieldPaymentMethodComponent);
+        const component: ReactWrapper<HostedFieldPaymentMethodProps> =
+            container.find(HostedFieldPaymentMethod);
 
         component.prop('initializePayment')({
             methodId: method.id,

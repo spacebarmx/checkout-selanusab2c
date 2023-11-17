@@ -1,6 +1,7 @@
 import { createLanguageService, LanguageService } from '@bigcommerce/checkout-sdk';
 
-import { FALLBACK_TRANSLATIONS } from '../../locale/translations';
+import { FALLBACK_TRANSLATIONS } from '@bigcommerce/checkout/locale';
+
 import { getPaymentMethod } from '../payment-methods.mock';
 
 import getPaymentMethodName from './getPaymentMethodName';
@@ -32,7 +33,7 @@ describe('getPaymentMethodName()', () => {
     it('returns specific translated name for Amazon', () => {
         const method = {
             ...getPaymentMethod(),
-            id: 'amazon',
+            id: 'amazonpay',
             method: 'widget',
             config: { displayName: '' },
         };

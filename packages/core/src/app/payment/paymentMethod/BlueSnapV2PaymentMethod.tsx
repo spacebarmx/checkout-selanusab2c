@@ -62,10 +62,10 @@ const BlueSnapV2PaymentMethod: FunctionComponent<BlueSnapV2PaymentMethodProps> =
 
     const appendPaymentPageContent = useCallback(() => {
         if (ref.current.paymentPageContentRef.current && paymentPageContent) {
-            ref.current.paymentPageContentRef.current.appendChild(paymentPageContent);
             paymentPageContent.addEventListener('load', () => {
                 setisLoadingIframe(false);
             });
+            ref.current.paymentPageContentRef.current.appendChild(paymentPageContent);
         }
     }, [paymentPageContent]);
 
@@ -73,7 +73,7 @@ const BlueSnapV2PaymentMethod: FunctionComponent<BlueSnapV2PaymentMethodProps> =
         <>
             <HostedPaymentMethod {...rest} initializePayment={initializeBlueSnapV2Payment} />
             <Modal
-                additionalModalClassName="modal--bluesnapv2"
+                additionalModalClassName="modal--bluesnap"
                 isOpen={!!paymentPageContent}
                 onAfterOpen={appendPaymentPageContent}
                 onRequestClose={cancelBlueSnapV2ModalFlow}

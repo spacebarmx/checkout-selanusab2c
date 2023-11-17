@@ -10,8 +10,8 @@ import React, { FunctionComponent } from 'react';
 import { act } from 'react-dom/test-utils';
 
 import { AnalyticsContextProps, AnalyticsEvents, AnalyticsProviderMock } from '@bigcommerce/checkout/analytics';
+import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
 
-import { CheckoutProvider } from '../checkout';
 import { createErrorLogger } from '../common/error';
 import { getStoreConfig } from '../config/config.mock';
 import { createEmbeddedCheckoutStylesheet } from '../embeddedCheckout';
@@ -23,6 +23,7 @@ import { getOrder } from './orders.mock';
 import OrderStatus from './OrderStatus';
 import OrderSummary from './OrderSummary';
 import ThankYouHeader from './ThankYouHeader';
+import { LocaleProvider } from '@bigcommerce/checkout/locale';
 
 describe('OrderConfirmation', () => {
     let checkoutService: CheckoutService;
@@ -63,9 +64,11 @@ describe('OrderConfirmation', () => {
 
         ComponentTest = (props) => (
             <CheckoutProvider checkoutService={checkoutService}>
-                <AnalyticsProviderMock>
-                    <OrderConfirmation {...props} />
-                </AnalyticsProviderMock>
+                <LocaleProvider checkoutService={checkoutService}>
+                    <AnalyticsProviderMock>
+                        <OrderConfirmation {...props} />
+                    </AnalyticsProviderMock>
+                </LocaleProvider>
             </CheckoutProvider>
         );
     });

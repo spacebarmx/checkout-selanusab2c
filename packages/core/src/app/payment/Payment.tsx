@@ -12,20 +12,20 @@ import React, { Component   , ReactNode } from 'react';
 import { ObjectSchema } from 'yup';
 
 import { AnalyticsContextProps } from '@bigcommerce/checkout/analytics';
-import { PaymentFormValues } from '@bigcommerce/checkout/payment-integration-api';
+import { ErrorLogger } from '@bigcommerce/checkout/error-handling-utils';
+import { withLanguage, WithLanguageProps } from '@bigcommerce/checkout/locale';
+import { CheckoutContextProps, PaymentFormValues } from '@bigcommerce/checkout/payment-integration-api';
 import { ChecklistSkeleton } from '@bigcommerce/checkout/ui';
 
 import { withAnalytics } from '../analytics';
-import { CheckoutContextProps, withCheckout } from '../checkout';
+import { withCheckout } from '../checkout';
 import {
-    ErrorLogger,
     ErrorModal,
     ErrorModalOnCloseProps,
     isCartChangedError,
     isErrorWithType,
 } from '../common/error';
 import { EMPTY_ARRAY } from '../common/utility';
-import { withLanguage, WithLanguageProps } from '../locale';
 import { TermsConditionsType } from '../termsConditions';
 
 import mapSubmitOrderErrorMessage, { mapSubmitOrderErrorTitle } from './mapSubmitOrderErrorMessage';
@@ -121,13 +121,9 @@ class Payment extends Component<
             onReady = noop,
             onUnhandledError = noop,
             usableStoreCredit,
-            defaultMethod,
             analyticsTracker
         } = this.props;
 
-        const { selectedMethod } = this.state;
-
-        analyticsTracker.selectedPaymentMethod((selectedMethod || defaultMethod)?.config.displayName);
 
         if (usableStoreCredit) {
             this.handleStoreCreditChange(true);
@@ -135,6 +131,10 @@ class Payment extends Component<
 
         try {
             await loadPaymentMethods();
+
+            const selectedMethod = this.state.selectedMethod || this.props.defaultMethod;
+
+            analyticsTracker.selectedPaymentMethod(selectedMethod?.config.displayName);
         } catch (error) {
             onUnhandledError(error);
         }
@@ -214,6 +214,7 @@ class Payment extends Component<
                             }
                             shouldHidePaymentSubmitButton={
                                 (uniqueSelectedMethodId &&
+                                    rest.isPaymentDataRequired() &&
                                     shouldHidePaymentSubmitButton[uniqueSelectedMethodId]) ||
                                 undefined
                             }
@@ -321,7 +322,7 @@ class Payment extends Component<
         const { defaultMethod, isSubmittingOrder, language } = this.props;
         const { selectedMethod = defaultMethod } = this.state;
 
-        // TODO: Perhaps there is a better way to handle `adyen`, `afterpay`, `amazon`,
+        // TODO: Perhaps there is a better way to handle `adyen`, `afterpay`, `amazonpay`,
         // `checkout.com`, `converge`, `sagepay`, `stripev3` and `sezzle`. They require
         //  a redirection to another website during the payment flow but are not
         //  categorised as hosted payment methods.
@@ -330,7 +331,7 @@ class Payment extends Component<
             !selectedMethod ||
             selectedMethod.type === PaymentMethodProviderType.Hosted ||
             selectedMethod.type === PaymentMethodProviderType.PPSDK ||
-            selectedMethod.id === PaymentMethodId.Amazon ||
+            selectedMethod.gateway === PaymentMethodId.BlueSnapDirect ||
             selectedMethod.id === PaymentMethodId.AmazonPay ||
             selectedMethod.id === PaymentMethodId.CBAMPGS ||
             selectedMethod.id === PaymentMethodId.Checkoutcom ||
@@ -382,6 +383,10 @@ class Payment extends Component<
 
             if (errorType === 'tax_provider_unavailable') {
                 window.location.reload();
+            }
+
+            if (errorType === 'cart_consistency') {
+                await loadCheckout();
             }
 
             if (isErrorWithType(error) && error.body) {
@@ -579,7 +584,6 @@ export function mapToPaymentProps({
         methods = stripeUpePaymentMethod.length ? stripeUpePaymentMethod : methods;
     }
 
-
     if (!checkout || !config || !customer || isComplete) {
         return null;
     }
@@ -613,7 +617,6 @@ export function mapToPaymentProps({
     if (consignments && consignments.length > 1) {
         const multiShippingIncompatibleMethodIds: string[] = [
             PaymentMethodId.AmazonPay,
-            PaymentMethodId.Amazon,
         ];
 
         filteredMethods = methods.filter((method: PaymentMethod) => {

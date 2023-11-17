@@ -1,10 +1,11 @@
 import { CheckoutSelectors, CustomError } from '@bigcommerce/checkout-sdk';
 import { createSelector } from 'reselect';
 
+import { CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
+
 import { EMPTY_ARRAY } from '../common/utility';
 
 import { WithCheckoutProps } from './Checkout';
-import { CheckoutContextProps } from './CheckoutContext';
 import getCheckoutStepStatuses from './getCheckoutStepStatuses';
 
 export default function mapToCheckoutProps({
@@ -15,7 +16,13 @@ export default function mapToCheckoutProps({
     const { promotions = EMPTY_ARRAY } = data.getCheckout() || {};
     const submitOrderError = errors.getSubmitOrderError() as CustomError;
     const {
-        checkoutSettings: { guestCheckoutEnabled: isGuestEnabled = false, features = {} } = {},
+        checkoutSettings: {
+            guestCheckoutEnabled: isGuestEnabled = false,
+            checkoutUserExperienceSettings = {
+                walletButtonsOnTop: false,
+                floatingLabelEnabled: false,
+            } ,
+        } = {},
         links: {
             loginLink: loginUrl = '',
             createAccountLink: createAccountUrl = '',
@@ -31,6 +38,8 @@ export default function mapToCheckoutProps({
         },
     );
 
+    const walletButtonsOnTopFlag = Boolean(checkoutUserExperienceSettings.walletButtonsOnTop);
+
     return {
         billingAddress: data.getBillingAddress(),
         cart: data.getCart(),
@@ -41,11 +50,11 @@ export default function mapToCheckoutProps({
         isLoadingCheckout: statuses.isLoadingCheckout(),
         isPending: statuses.isPending(),
         isPriceHiddenFromGuests,
+        isShowingWalletButtonsOnTop: walletButtonsOnTopFlag,
         loadCheckout: checkoutService.loadCheckout,
         loginUrl,
         cartUrl,
         createAccountUrl,
-        canCreateAccountInCheckout: features['CHECKOUT-4941.account_creation_in_checkout'],
         promotions,
         subscribeToConsignments: subscribeToConsignmentsSelector({
             checkoutService,

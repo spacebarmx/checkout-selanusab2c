@@ -10,9 +10,11 @@ import { noop } from 'lodash';
 import React, { FunctionComponent } from 'react';
 import { object } from 'yup';
 
-import { CheckoutProvider } from '../../checkout';
+import { createLocaleContext, LocaleContext, LocaleContextType } from '@bigcommerce/checkout/locale';
+import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
+
 import { getStoreConfig } from '../../config/config.mock';
-import { createLocaleContext, LocaleContext, LocaleContextType } from '../../locale';
+import { getCustomer } from '../../customer/customers.mock';
 import {
     withHostedCreditCardFieldset,
     WithInjectedHostedCreditCardFieldsetProps,
@@ -51,7 +53,7 @@ jest.mock('../hostedCreditCard', () => ({
         <Component {...props} {...injectedProps} />
     )) as jest.Mocked<typeof withHostedCreditCardFieldset>,
 }));
-jest.mock('../../common/dom', () => ({
+jest.mock('@bigcommerce/checkout/dom-utils', () => ({
     getAppliedStyles: () => {
         return { color: '#cccccc' };
     },
@@ -78,6 +80,8 @@ describe('when using Stripe payment', () => {
         localeContext = createLocaleContext(getStoreConfig());
 
         jest.spyOn(checkoutState.data, 'getConfig').mockReturnValue(getStoreConfig());
+
+        jest.spyOn(checkoutState.data, 'getCustomer').mockReturnValue(getCustomer());
 
         jest.spyOn(checkoutService, 'deinitializePayment').mockResolvedValue(checkoutState);
 
@@ -141,6 +145,7 @@ describe('when using Stripe payment', () => {
                             fieldText: '#cccccc',
                         }),
                         onError: expect.any(Function),
+                        render: expect.any(Function),
                     },
                 }),
             );
@@ -192,6 +197,7 @@ describe('when using Stripe payment', () => {
                             fieldText: '#cccccc',
                         }),
                         onError: expect.any(Function),
+                        render: expect.any(Function),
                     },
                 }),
             );
@@ -243,6 +249,7 @@ describe('when using Stripe payment', () => {
                             fieldText: '#cccccc',
                         }),
                         onError: expect.any(Function),
+                        render: expect.any(Function),
                     },
                 }),
             );
@@ -294,6 +301,7 @@ describe('when using Stripe payment', () => {
                             fieldText: '#cccccc',
                         }),
                         onError: expect.any(Function),
+                        render: expect.any(Function),
                     },
                 }),
             );

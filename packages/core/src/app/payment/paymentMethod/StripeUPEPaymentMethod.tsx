@@ -1,13 +1,16 @@
 import { PaymentInitializeOptions } from '@bigcommerce/checkout-sdk';
 import { noop } from 'lodash';
-import React, { FunctionComponent, useCallback } from 'react';
+import React, { FunctionComponent, useCallback, useContext } from 'react';
 
-import { CheckoutContextProps, withCheckout } from '../../checkout';
-import { getAppliedStyles } from '../../common/dom';
+import { getAppliedStyles } from '@bigcommerce/checkout/dom-utils';
+import { CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
+
+import { withCheckout } from '../../checkout';
 import {
     withHostedCreditCardFieldset,
     WithInjectedHostedCreditCardFieldsetProps,
 } from '../hostedCreditCard';
+import PaymentContext from '../PaymentContext';
 
 import HostedWidgetPaymentMethod, {
     HostedWidgetPaymentMethodProps,
@@ -17,14 +20,22 @@ export type StripePaymentMethodProps = Omit<HostedWidgetPaymentMethodProps, 'con
 
 interface WithCheckoutStripePaymentMethodProps {
     storeUrl: string;
+    isGuest: boolean;
+    isStripeLinkAuthenticated: boolean | undefined;
 }
 
 const StripeUPEPaymentMethod: FunctionComponent<
     StripePaymentMethodProps &
         WithInjectedHostedCreditCardFieldsetProps &
         WithCheckoutStripePaymentMethodProps
-> = ({ initializePayment, method, storeUrl, onUnhandledError = noop, ...rest }) => {
+> = ({ initializePayment, method, storeUrl, isGuest, isStripeLinkAuthenticated,  onUnhandledError = noop, ...rest }) => {
     const containerId = `stripe-${method.id}-component-field`;
+
+    const paymentContext = useContext(PaymentContext);
+
+    const renderSubmitButton = () => {
+        paymentContext?.hidePaymentSubmitButton(method, false);
+    }
 
     const initializeStripePayment: HostedWidgetPaymentMethodProps['initializePayment'] =
         useCallback(
@@ -37,6 +48,8 @@ const StripeUPEPaymentMethod: FunctionComponent<
                 ]);
                 const formLabel = getStylesFromElement(`${containerId}--label`, ['color']);
                 const formError = getStylesFromElement(`${containerId}--error`, ['color']);
+
+                paymentContext?.hidePaymentSubmitButton(method, true);
 
                 return initializePayment({
                     ...options,
@@ -52,6 +65,7 @@ const StripeUPEPaymentMethod: FunctionComponent<
                             fieldBorder: formInput['border-color'],
                         },
                         onError: onUnhandledError,
+                        render: renderSubmitButton,
                     },
                 });
             },
@@ -85,6 +99,14 @@ const StripeUPEPaymentMethod: FunctionComponent<
         );
     };
 
+    const shouldSavingCardsBeEnabled = (): boolean => {
+        if (!isGuest && isStripeLinkAuthenticated) {
+            return false;
+        } 
+
+        return true;
+    }
+
     return (
         <>
             <HostedWidgetPaymentMethod
@@ -93,24 +115,28 @@ const StripeUPEPaymentMethod: FunctionComponent<
                 hideContentWhenSignedOut
                 initializePayment={initializeStripePayment}
                 method={method}
+                shouldSavingCardsBeEnabled={shouldSavingCardsBeEnabled()}
             />
             {renderCheckoutThemeStylesForStripeUPE()}
         </>
     );
 };
 
-function mapFromCheckoutProps({ checkoutState }: CheckoutContextProps) {
+function mapFromCheckoutProps({ checkoutState }: CheckoutContextProps ) {
     const {
-        data: { getConfig },
+        data: { getConfig, getCustomer },
     } = checkoutState;
     const config = getConfig();
+    const customer = getCustomer();
 
-    if (!config) {
+    if (!config || !customer) {
         return null;
     }
 
     return {
         storeUrl: config.links.siteLink,
+        isGuest: customer.isGuest,
+        isStripeLinkAuthenticated: customer.isStripeLinkAuthenticated,
     };
 }
 

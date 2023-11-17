@@ -1,4 +1,5 @@
 import {
+    CartConsistencyError,
     CheckoutSelectors,
     CheckoutService,
     createCheckoutService,
@@ -12,14 +13,14 @@ import { find, merge, noop } from 'lodash';
 import React, { FunctionComponent } from 'react';
 
 import { AnalyticsProviderMock } from '@bigcommerce/checkout/analytics';
+import { createLocaleContext, LocaleContext, LocaleContextType } from '@bigcommerce/checkout/locale';
+import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
 
 import { getCart } from '../cart/carts.mock';
-import { CheckoutProvider } from '../checkout';
 import { getCheckout, getCheckoutPayment } from '../checkout/checkouts.mock';
 import { createErrorLogger, ErrorModal } from '../common/error';
 import { getStoreConfig } from '../config/config.mock';
 import { getCustomer } from '../customer/customers.mock';
-import { createLocaleContext, LocaleContext, LocaleContextType } from '../locale';
 import { getOrder } from '../order/orders.mock';
 import { getConsignment } from '../shipping/consignment.mock';
 import { Button } from '../ui/button';
@@ -664,6 +665,31 @@ describe('Payment', () => {
 
         expect(checkoutService.loadCheckout).toHaveBeenCalled();
         expect(container.find(PaymentForm).prop('didExceedSpamLimit')).toBeTruthy();
+    });
+
+    it('reloads checkout object if unable to submit order due to cart consistency error', async () => {
+        jest.spyOn(checkoutService, 'loadCheckout')
+            .mockResolvedValue(checkoutState);
+
+        jest.spyOn(checkoutState.errors, 'getSubmitOrderError')
+            .mockReturnValue({
+                type: 'cart_consistency',
+            } as unknown as CartConsistencyError);
+
+        const container = mount(<PaymentTest {...defaultProps} />);
+
+        await new Promise((resolve) => process.nextTick(resolve));
+
+        container.update();
+
+        expect(container.find('#errorModalMessage').text())
+            .toBe('Your checkout could not be processed because some details have changed. Please review your order and try again.');
+
+        container.find('ErrorModal Button')
+            .simulate('click');
+
+        expect(checkoutService.loadCheckout)
+            .toHaveBeenCalled();
     });
 
     it('clears error when error has no body', async () => {

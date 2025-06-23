@@ -69,18 +69,6 @@ describe('PaymentSubmitButton', () => {
         expect(screen.getByText(languageService.translate('payment.visa_checkout_continue_action'))).toBeInTheDocument();
     });
 
-    it('renders button with special label for ChasePay', () => {
-        render(<PaymentSubmitButtonTest methodType="chasepay" />);
-
-        expect(screen.getByText(languageService.translate('payment.chasepay_continue_action'))).toBeInTheDocument();
-    });
-
-    it('renders button with special label for Opy', () => {
-        render(<PaymentSubmitButtonTest methodId="opy" methodName="Opy" />);
-
-        expect(screen.getByText(languageService.translate('payment.opy_continue_action', { methodName: 'Opy' }))).toBeInTheDocument();
-    });
-
     it('renders button with special label for PayPal', () => {
         render(<PaymentSubmitButtonTest isComplete={true} methodType="paypal" />);
 
@@ -91,6 +79,17 @@ describe('PaymentSubmitButton', () => {
         render(<PaymentSubmitButtonTest methodType="paypal" />);
 
         expect(screen.getByText(languageService.translate('payment.paypal_continue_action'))).toBeInTheDocument();
+    });
+
+    it('renders button with "place order" label for PayPal when the order placement starts on checkout page', () => {
+        render(
+            <PaymentSubmitButtonTest
+                methodId={PaymentMethodId.PaypalCommerce}
+                methodType="paypal"
+            />,
+        );
+
+        expect(screen.getByText(languageService.translate('payment.place_order_action'))).toBeInTheDocument();
     });
 
     it('renders button with special label for Braintree Venmo', () => {

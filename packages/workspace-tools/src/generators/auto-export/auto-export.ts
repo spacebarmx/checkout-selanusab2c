@@ -39,7 +39,7 @@ export default async function autoExport({
         .createPrinter()
         .printList(
             ts.ListFormat.MultiLine,
-            ts.createNodeArray(exportDeclarations.filter(exists)),
+            ts.factory.createNodeArray(exportDeclarations.filter(exists)),
             ts.createSourceFile(outputPath, '', ts.ScriptTarget.ESNext),
         );
 }
@@ -65,15 +65,23 @@ async function createExportDeclaration(
 
             return statement.exportClause.elements.filter(ts.isExportSpecifier);
         })
-        .map((element) => element.name.escapedText.toString())
-        .filter((memberName) => memberName.match(new RegExp(memberPattern)));
+
+        .map((element) =>
+            'escapedText' in element.name
+                ? element.name.escapedText.toString()
+                // TODO:CHECKOUT-9228 Fix lint error after nx upgrade to 19.8.9
+                // eslint-disable-next-line @typescript-eslint/no-base-to-string
+                : element.name.toString(),
+        )
+        // TODO:CHECKOUT-9228 Fix lint error after nx upgrade to 19.8.9
+        // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
+        .filter((memberName: string) => memberName.match(new RegExp(memberPattern)));
 
     if (memberNames.length === 0) {
         return;
     }
 
     return ts.factory.createExportDeclaration(
-        undefined,
         undefined,
         false,
         ts.factory.createNamedExports(

@@ -1,5 +1,7 @@
 import { CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
 
+import { isExperimentEnabled } from '../common/utility';
+
 import { WithCheckoutCartSummaryProps } from './CartSummary';
 import mapToRedeemableProps from './mapToRedeemableProps';
 
@@ -23,15 +25,19 @@ export default function mapToCartSummaryProps(
 
     const { isStoreCreditApplied, grandTotal } = checkout;
     const { storeCredit } = customer;
-    const updatedCartModal = config?.checkoutSettings.features['CHECKOUT-7403.updated_cart_summary_modal'] ?? false;
+
+    const isShippingDiscountDisplayEnabled = isExperimentEnabled(
+        config.checkoutSettings,
+        'PROJECT-6643.enable_shipping_discounts_in_orders',
+    );
 
     return {
+        isShippingDiscountDisplayEnabled,
         checkout,
         shopperCurrency: config.shopperCurrency,
         cartUrl: config.links.cartLink,
         storeCurrency: config.currency,
         storeCreditAmount: isStoreCreditApplied ? Math.min(grandTotal, storeCredit) : undefined,
-        isUpdatedCartSummayModal: updatedCartModal,
         ...redeemableProps,
     };
 }

@@ -5,6 +5,7 @@ import { Page } from '@playwright/test';
 import { getStoreUrl } from '../';
 
 import { ApiContextFactory } from './ApiContextFactory';
+import { Locales } from './types';
 
 /**
  * @internal
@@ -15,13 +16,13 @@ export class ApiRequestsSender {
     private readonly storeUrl: string;
     private readonly startTime: number;
 
-    constructor(page: Page) {
+    constructor(page: Page, fakerLocale = Locales.US) {
         this.startTime = Date.now();
         this.page = page;
         this.storeUrl = getStoreUrl();
         this.apiContextFactory = new ApiContextFactory();
 
-        faker.setLocale('en_US');
+        faker.setLocale(fakerLocale);
 
         // hack for BC dev store's root certificate issue during recording HAR
         // https://stackoverflow.com/questions/31673587/error-unable-to-verify-the-first-certificate-in-nodejs
@@ -75,7 +76,7 @@ export class ApiRequestsSender {
         });
     }
 
-    async completeSingleShippingAndSkipToPaymentStep(): Promise<void> {
+    async completeSingleShippingAndSkipToPaymentStep(countryCode = 'US'): Promise<void> {
         const apiContext = await this.apiContextFactory.create(this.page, this.storeUrl);
         const checkout = await this.getCheckoutOrThrow();
 
@@ -91,7 +92,7 @@ export class ApiRequestsSender {
             address1: faker.address.streetName(),
             address2: faker.address.secondaryAddress(),
             city: faker.address.cityName(),
-            countryCode: 'US',
+            countryCode,
             stateOrProvince: '',
             postalCode: faker.address.zipCodeByState(stateCode),
             shouldSaveAddress: true,
@@ -156,7 +157,7 @@ export class ApiRequestsSender {
                     phone: faker.phone.phoneNumber('##########'),
                     city: faker.address.cityName(),
                     stateOrProvinceCode: stateCode,
-                    countryCode: 'US',
+                    countryCode,
                     postalCode: faker.address.zipCodeByState(stateCode),
                 },
             },

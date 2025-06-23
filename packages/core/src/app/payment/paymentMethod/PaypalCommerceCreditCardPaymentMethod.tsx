@@ -1,9 +1,7 @@
 import React, { FunctionComponent, useCallback } from 'react';
 
-import {
-    withHostedCreditCardFieldset,
-    WithInjectedHostedCreditCardFieldsetProps,
-} from '../hostedCreditCard';
+import { WithInjectedHostedCreditCardFieldsetProps } from '../hostedCreditCard';
+import withHostedPayPalCommerceCreditCardFieldset from '../hostedCreditCard/withHostedPayPalCommerceCreditCardFieldset';
 
 import CreditCardPaymentMethod, { CreditCardPaymentMethodProps } from './CreditCardPaymentMethod';
 
@@ -47,4 +45,4 @@ const PaypalCommerceCreditCardPaymentMethod: FunctionComponent<
     );
 };
 
-export default withHostedCreditCardFieldset(PaypalCommerceCreditCardPaymentMethod);
+export default withHostedPayPalCommerceCreditCardFieldset(PaypalCommerceCreditCardPaymentMethod);

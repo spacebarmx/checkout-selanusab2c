@@ -2,7 +2,7 @@ aliases:
   - &node_executor
       executor:
         name: node/node
-        node-version: "18.17"
+        node-version: "22.13.0"
 
   - &release_filter
       branches:
@@ -19,16 +19,28 @@ version: 2.1
 orbs:
   ci: bigcommerce/internal@volatile
   node: bigcommerce/internal-node@volatile
+  security: bigcommerce/internal-security@volatile
+  microapp: bigcommerce/internal-microapp@volatile
 
 jobs:
   test-packages:
     <<: *node_executor
+    resource_class: medium+
     steps:
       - ci/pre-setup
       - node/npm-install
       - run:
           name: "Run unit tests for packages"
           command: npm run test:others
+
+  test-extension:
+    <<: *node_executor
+    steps:
+      - ci/pre-setup
+      - node/npm-install
+      - run:
+          name: "Run unit tests for checkout extension"
+          command: npm run test:extension
 
   test-core:
     <<: *node_executor
@@ -63,12 +75,22 @@ jobs:
 
   build:
     <<: *node_executor
+    resource_class: medium+
+    parameters:
+      prerelease:
+        type: boolean
+        default: false
     steps:
       - ci/pre-setup
       - node/npm-install
       - run:
-          name: "Test build"
-          command: npm run build
+          name: "Build artifacts"
+          command: |
+            if [ << parameters.prerelease >> = true ]; then
+              npm run nx:prerelease-build
+            else
+              npm run build
+            fi
       - persist_to_workspace:
           root: .
           paths:
@@ -164,10 +186,15 @@ workflows:
       - test-packages:
           filters:
             <<: *pull_request_filter
+      - test-extension:
+          filters:
+            <<: *pull_request_filter
       - test-core:
           filters:
             <<: *pull_request_filter
       - build:
+          name: build-prerelease
+          prerelease: true
           filters:
             <<: *pull_request_filter
       - lint:
@@ -179,9 +206,30 @@ workflows:
       - sdk-on-cdn:
           filters:
             <<: *pull_request_filter
-      - ci/validate-commits:
+      - security/scan:
+          name: "Gitleaks secrets scan"
+          filters:
+            branches:
+              ignore: /pull\/[0-9]+/
+          context: org-global
+          GITLEAKS_BLOCK: "false"
+      - microapp/upload-artifact:
           filters:
             <<: *pull_request_filter
+          context: GCR + Artifact Bucket Access
+          requires:
+            - test-core
+            - test-packages
+            - test-extension
+            - lint
+            - build-prerelease
+            - e2e
+      - ci/notify-success:
+          filters:
+            <<: *pull_request_filter
+          context: GCR + Artifact Bucket Access
+          requires:
+            - microapp/upload-artifact
 
   release:
     jobs:
@@ -189,6 +237,9 @@ workflows:
           filters:
             <<: *release_filter
       - test-packages:
+          filters:
+            <<: *release_filter
+      - test-extension:
           filters:
             <<: *release_filter
       - lint:
@@ -200,24 +251,30 @@ workflows:
       - e2e:
           filters:
             <<: *release_filter
-      - approve:
-          filters:
-            <<: *release_filter
-          type: approval
-          requires:
-            - test-core
-            - test-packages
-            - lint
-            - build
-            - e2e
       - release:
           filters:
             <<: *release_filter
           requires:
-            - approve
+            - test-core
+            - test-packages
+            - test-extension
+            - lint
+            - build
+            - e2e
       - upload_to_sentry:
           filters:
             <<: *release_filter
           requires:
-            - approve
             - release
+      - microapp/upload-artifact:
+          filters:
+            <<: *release_filter
+          context: GCR + Artifact Bucket Access
+          requires:
+            - release
+      - ci/notify-success:
+          filters:
+            <<: *release_filter
+          context: GCR + Artifact Bucket Access
+          requires:
+            - microapp/upload-artifact

@@ -5,6 +5,9 @@ export default interface CheckoutButtonProps {
     containerId: string;
     checkoutService: CheckoutService;
     checkoutState: CheckoutSelectors;
+    checkoutButtonContainerClass?: string;
+    additionalInitializationOptions?: Record<string, unknown>;
     language: LanguageService;
     onUnhandledError(error: Error): void;
+    onWalletButtonClick(methodName: string): void;
 }

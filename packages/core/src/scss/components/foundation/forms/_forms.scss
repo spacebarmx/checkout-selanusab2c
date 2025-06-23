@@ -21,7 +21,7 @@
     }
 
     .form-fieldset {
-        margin-bottom: spacing("single");
+        margin-bottom: #{spacing("half") + spacing("third")};
 
         &:last-child {
             margin-bottom: 0;
@@ -40,6 +40,7 @@
 
     .form-field {
         position: relative;
+        margin: 0 0 spacing("half");
 
         &:last-child {
             margin-bottom: 0;
@@ -54,6 +55,13 @@
             padding-left: $input-horizontalPadding;
             padding-right: $input-horizontalPadding;
             padding-top: $input-verticalPadding * 1.5;
+
+            &.floating-form-field-input {
+                color: $color-black;
+                font-family: $fontFamily-montserrat;
+                font-size: $fontSize-smallest;
+                font-weight: $fontWeight-normal;
+            }
         }
 
         .floating-input:not(:focus),
@@ -90,6 +98,18 @@
                 font-size: $floating-label-font-size--default;
                 vertical-align: baseline;
             }
+
+            &.floating-form-field-label {
+                color: $color-secondaryDarkest;
+                font-family: $fontFamily-montserrat;
+                font-size: $fontSize-smallest;
+                font-weight: $fontWeight-medium;
+                margin-top: spacing("eighth");
+
+                small {
+                    font-size: $fontSize-smallest;
+                }
+            }
         }
 
         .react-datepicker__tab-loop + .floating-label,
@@ -107,6 +127,18 @@
 
             small {
                 font-size: fontSize("tiny");
+            }
+
+            &.floating-form-field-label{
+                color: $color-secondaryDarkest;
+                font-family: $fontFamily-montserrat;
+                font-size: $fontSize-tiny;
+                font-weight: $fontWeight-medium;
+                margin-top: 0;
+
+                small {
+                    font-size: $fontSize-tiny;
+                }
             }
         }
     }
@@ -137,7 +169,7 @@
     }
 
     .form-actions {
-        margin: #{spacing("single") + spacing("half")} 0;
+        margin: #{spacing("single") + spacing("quarter")} 0;
         padding: 0;
 
         .button:first-child {
@@ -185,7 +217,7 @@
         background-color: $legend-bg;
         color: $header-font-color;
         font-weight: $legend-font-weight;
-        padding: spacing("half") 0;
+        padding: 0 0 spacing("half") 0;
         width: auto;
     }
 

@@ -15,7 +15,7 @@ import { AddressFormSkeleton } from '@bigcommerce/checkout/ui';
 
 import { isEqualAddress, mapAddressFromFormValues } from '../address';
 import { withCheckout } from '../checkout';
-import { EMPTY_ARRAY, isFloatingLabelEnabled } from '../common/utility';
+import { EMPTY_ARRAY, isExperimentEnabled, isFloatingLabelEnabled } from '../common/utility';
 import { getShippableItemsCount } from '../shipping';
 import { Legend } from '../ui/form';
 
@@ -40,6 +40,7 @@ export interface WithCheckoutBillingProps {
     billingAddress?: Address;
     methodId?: string;
     isFloatingLabelEnabled?: boolean;
+    newFontStyle?: boolean;
     getFields(countryCode?: string): FormField[];
     initialize(): Promise<CheckoutSelectors>;
     updateAddress(address: Partial<Address>): Promise<CheckoutSelectors>;
@@ -61,13 +62,13 @@ class Billing extends Component<BillingProps & WithCheckoutBillingProps> {
     }
 
     render(): ReactNode {
-        const { updateAddress, isInitializing, ...props } = this.props;
+        const { updateAddress, isInitializing, newFontStyle, ...props } = this.props;
 
         return (
             <AddressFormSkeleton isLoading={isInitializing}>
                 <div className="checkout-form">
                     <div className="form-legend-container">
-                        <Legend testId="billing-address-heading">
+                        <Legend newFontStyle={newFontStyle} testId="billing-address-heading">
                             <TranslatedString id="billing.billing_address_heading" />
                         </Legend>
                     </div>
@@ -143,13 +144,9 @@ function mapToBillingProps({
         return null;
     }
 
-    const { enableOrderComments, googleMapsApiKey, features } = config.checkoutSettings;
+    const { enableOrderComments, googleMapsApiKey } = config.checkoutSettings;
 
-    const countriesWithAutocomplete = ['US', 'CA', 'AU', 'NZ'];
-
-    if (features['CHECKOUT-4183.checkout_google_address_autocomplete_uk']) {
-        countriesWithAutocomplete.push('GB');
-    }
+    const countriesWithAutocomplete = ['US', 'CA', 'AU', 'NZ', 'GB'];
 
     return {
         billingAddress: getBillingAddress(),
@@ -167,6 +164,7 @@ function mapToBillingProps({
         updateAddress: checkoutService.updateBillingAddress,
         updateCheckout: checkoutService.updateCheckout,
         isFloatingLabelEnabled: isFloatingLabelEnabled(config.checkoutSettings),
+        newFontStyle: isExperimentEnabled(config.checkoutSettings, 'CHECKOUT-7962.update_font_style_on_checkout_page')
     };
 }
 

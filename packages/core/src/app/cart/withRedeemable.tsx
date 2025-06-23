@@ -18,13 +18,13 @@ export default function withRedeemable(
             onRemovedCoupon,
             onRemovedGiftCertificate,
             storeCreditAmount,
-            isUpdatedCartSummayModal = false,
+            isShippingDiscountDisplayEnabled,
             ...redeemableProps
         } = props;
 
         return (
             <OriginalComponent
-                {...mapToOrderSummarySubtotalsProps(checkout)}
+                {...mapToOrderSummarySubtotalsProps(checkout, isShippingDiscountDisplayEnabled)}
                 additionalLineItems={
                     <Redeemable
                         {...{
@@ -35,7 +35,6 @@ export default function withRedeemable(
                     />
                 }
                 headerLink={headerLink}
-                isUpdatedCartSummayModal={isUpdatedCartSummayModal}
                 lineItems={checkout.cart.lineItems}
                 onRemovedCoupon={onRemovedCoupon}
                 onRemovedGiftCertificate={onRemovedGiftCertificate}

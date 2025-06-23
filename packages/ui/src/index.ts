@@ -1,5 +1,14 @@
 /* istanbul ignore file */
 export { Alert, AlertType } from './alert';
+export {
+    Accordion,
+    AccordionProps,
+    AccordionItem,
+    AccordionItemHeaderProps,
+    AccordionItemProps,
+    AccordionContext,
+    AccordionContextProps,
+} from './accordion';
 export { Button, ButtonSize, ButtonVariant } from './button';
 export { DropdownTrigger } from './dropdown';
 export {
@@ -23,13 +32,13 @@ export {
     TextInput,
     TextInputIframeContainer,
     WalletButtonsContainerSkeleton,
+    RadioInput,
 } from './form';
 export {
     CreditCardIcon,
     IconNewAccount,
     IconPaypal,
-    IconPayPalConnect,
-    IconPayPalConnectSmall,
+    IconPayPalFastlane,
     IconSize,
     IconHelp,
     IconLock,
@@ -42,6 +51,7 @@ export {
     IconCardDankort,
     IconCardDinersClub,
     IconCardDiscover,
+    IconEdit,
     IconCardElectron,
     IconCardElo,
     IconCardHipercard,
@@ -60,9 +70,16 @@ export {
     IconLiteCoin,
     IconProps,
     IconShibaInu,
+    IconSepa,
     IconUsdCoin,
     IconAch,
 } from './icon';
-export { LoadingOverlay, LoadingSpinner } from './loading';
-export { Modal, ModalHeader, ModalTrigger, ModalTriggerModalProps } from './modal';
+export { LazyContainer, LoadingNotification, LoadingOverlay, LoadingSpinner } from './loading';
+export {
+    ConfirmationModal,
+    Modal,
+    ModalHeader,
+    ModalTrigger,
+    ModalTriggerModalProps,
+} from './modal';
 export { TooltipTrigger } from './tooltip';

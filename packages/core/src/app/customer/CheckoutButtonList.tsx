@@ -1,72 +1,62 @@
-import { CustomerInitializeOptions, CustomerRequestOptions } from '@bigcommerce/checkout-sdk';
+import {
+    CheckoutSelectors,
+    CheckoutService,
+    CheckoutSettings,
+    CustomerInitializeOptions,
+    CustomerRequestOptions,
+} from '@bigcommerce/checkout-sdk';
+import { noop } from 'lodash';
 import React, { FunctionComponent, memo } from 'react';
 
-import { TranslatedString } from '@bigcommerce/checkout/locale';
+import { TranslatedString, useLocale } from '@bigcommerce/checkout/locale';
+import { CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
 
-import { isApplePayWindow } from '../common/utility';
+import { withCheckout } from '../checkout';
 
-import CheckoutButton from './CheckoutButton';
 import { AmazonPayV2Button, ApplePayButton, PayPalCommerceButton } from './customWalletButton';
-
-const APPLE_PAY = 'applepay';
-
-// TODO: The API should tell UI which payment method offers its own checkout button
-export const SUPPORTED_METHODS: string[] = [
-    'amazonpay',
-    APPLE_PAY,
-    'braintreevisacheckout',
-    'braintreepaypal',
-    'braintreepaypalcredit',
-    'chasepay',
-    'masterpass',
-    'paypalcommerce',
-    'paypalcommercevenmo',
-    'paypalcommercecredit',
-    'googlepayadyenv2',
-    'googlepayadyenv3',
-    'googlepayauthorizenet',
-    'googlepaybnz',
-    'googlepaybraintree',
-    'googlepaypaypalcommerce',
-    'googlepaycheckoutcom',
-    'googlepaycybersourcev2',
-    'googlepayorbital',
-    'googlepaystripe',
-    'googlepaystripeupe',
-    'googlepayworldpayaccess',
-];
+import { getSupportedMethodIds } from './getSupportedMethods';
+import resolveCheckoutButton from './resolveCheckoutButton';
+import CheckoutButton from './CheckoutButton';
+import CheckoutButtonV1Resolver from './WalletButtonV1Resolver';
+import { isExperimentEnabled } from '../common/utility';
 
 export interface CheckoutButtonListProps {
-    methodIds?: string[];
+    checkoutSettings: CheckoutSettings;
+    hideText?: boolean;
     isInitializing?: boolean;
     isShowingWalletButtonsOnTop?: boolean;
-    hideText?: boolean;
+    methodIds?: string[];
     checkEmbeddedSupport?(methodIds: string[]): void;
     deinitialize(options: CustomerRequestOptions): void;
     initialize(options: CustomerInitializeOptions): void;
+    onClick?(methodId: string): void;
     onError?(error: Error): void;
 }
 
-export const filterUnsupportedMethodIds = (methodIds:string[]): string[] => {
-    return (methodIds).filter((methodId) => {
-        if (methodId === APPLE_PAY && !isApplePayWindow(window)) {
-            return false;
-        }
-
-        return SUPPORTED_METHODS.indexOf(methodId) !== -1;
-    });
+interface WithCheckoutCheckoutButtonListProps {
+    checkoutState: CheckoutSelectors;
+    checkoutService: CheckoutService;
 }
 
-const CheckoutButtonList: FunctionComponent<CheckoutButtonListProps> = ({
-    checkEmbeddedSupport,
-    onError,
-    isInitializing = false,
-    isShowingWalletButtonsOnTop= false,
-    methodIds,
+const CheckoutButtonList: FunctionComponent<WithCheckoutCheckoutButtonListProps & CheckoutButtonListProps> = ({
+    checkoutService,
+    checkoutSettings,
+    checkoutState,
     hideText = false,
-    ...rest
+    isInitializing = false,
+    isShowingWalletButtonsOnTop = false,
+    methodIds = [],
+    checkEmbeddedSupport,
+    deinitialize,
+    initialize,
+    onClick = noop,
+    onError,
 }) => {
-    const supportedMethodIds = filterUnsupportedMethodIds(methodIds ?? []);
+    const { language } = useLocale();
+
+    const shouldUseResolverButtonComponentsApproach = isExperimentEnabled(checkoutSettings, 'PAYPAL-5502.update_wallet_buttons_implementation_in_customer_step');
+
+    const supportedMethodIds = getSupportedMethodIds(methodIds, checkoutSettings);
 
     if (supportedMethodIds.length === 0) {
         return null;
@@ -86,6 +76,97 @@ const CheckoutButtonList: FunctionComponent<CheckoutButtonListProps> = ({
         }
     }
 
+    const renderButtons = () => {
+        if (shouldUseResolverButtonComponentsApproach) {
+            return supportedMethodIds.map((methodId) => {
+                const ResolvedCheckoutButton = resolveCheckoutButton({ id: methodId });
+
+                if (!ResolvedCheckoutButton) {
+                    return <CheckoutButtonV1Resolver
+                        deinitialize={deinitialize}
+                        initialize={initialize}
+                        isShowingWalletButtonsOnTop={false}
+                        key={methodId}
+                        methodId={methodId}
+                        onClick={onClick}
+                        onError={onClick}
+                    />
+                }
+
+                return <ResolvedCheckoutButton
+                    checkoutService={checkoutService}
+                    checkoutState={checkoutState}
+                    containerId={`${methodId}CheckoutButton`}
+                    key={methodId}
+                    language={language}
+                    methodId={methodId}
+                    onUnhandledError={onClick}
+                    onWalletButtonClick={onClick}
+                />;
+            });
+        }
+
+        return methodIds.map((methodId) => {
+            if (methodId === 'applepay') {
+                return (
+                    <ApplePayButton
+                        containerId={`${methodId}CheckoutButton`}
+                        key={methodId}
+                        methodId={methodId}
+                        isShowingWalletButtonsOnTop={isShowingWalletButtonsOnTop}
+                        deinitialize={deinitialize}
+                        initialize={initialize}
+                        onClick={onClick}
+                        onError={onError}
+                    />
+                );
+            }
+
+            if (methodId === 'amazonpay') {
+                return (
+                    <AmazonPayV2Button
+                        containerId={`${methodId}CheckoutButton`}
+                        key={methodId}
+                        methodId={methodId}
+                        isShowingWalletButtonsOnTop={isShowingWalletButtonsOnTop}
+                        deinitialize={deinitialize}
+                        initialize={initialize}
+                        onClick={onClick}
+                        onError={onError}
+                    />
+                );
+            }
+
+            if (methodId === 'paypalcommerce' || methodId === 'paypalcommercecredit') {
+                return (
+                    <PayPalCommerceButton
+                        containerId={`${methodId}CheckoutButton`}
+                        key={methodId}
+                        methodId={methodId}
+                        isShowingWalletButtonsOnTop={isShowingWalletButtonsOnTop}
+                        deinitialize={deinitialize}
+                        initialize={initialize}
+                        onClick={onClick}
+                        onError={onError}
+                    />
+                );
+            }
+
+            return (
+                <CheckoutButton
+                    containerId={`${methodId}CheckoutButton`}
+                    key={methodId}
+                    methodId={methodId}
+                    isShowingWalletButtonsOnTop={isShowingWalletButtonsOnTop}
+                    deinitialize={deinitialize}
+                    initialize={initialize}
+                    onClick={onClick}
+                    onError={onError}
+                />
+            );
+        });
+    };
+
     return (
         <>
             {!isInitializing && !hideText && (
@@ -95,57 +176,20 @@ const CheckoutButtonList: FunctionComponent<CheckoutButtonListProps> = ({
             )}
 
             <div className="checkoutRemote">
-                {supportedMethodIds.map((methodId) => {
-                    if (methodId === 'applepay') {
-                        return (
-                            <ApplePayButton
-                                containerId={`${methodId}CheckoutButton`}
-                                key={methodId}
-                                methodId={methodId}
-                                onError={onError}
-                                {...rest}
-                            />
-                        );
-                    }
-
-                    if (methodId === 'amazonpay') {
-                        return (
-                            <AmazonPayV2Button
-                                containerId={`${methodId}CheckoutButton`}
-                                key={methodId}
-                                methodId={methodId}
-                                onError={onError}
-                                {...rest}
-                            />
-                        );
-                    }
-
-                    if (methodId === 'paypalcommerce' || methodId === 'paypalcommercecredit') {
-                        return (
-                            <PayPalCommerceButton
-                                containerId={`${methodId}CheckoutButton`}
-                                key={methodId}
-                                methodId={methodId}
-                                onError={onError}
-                                {...rest}
-                            />
-                        );
-                    }
-
-                    return (
-                        <CheckoutButton
-                            containerId={`${methodId}CheckoutButton`}
-                            isShowingWalletButtonsOnTop={isShowingWalletButtonsOnTop}
-                            key={methodId}
-                            methodId={methodId}
-                            onError={onError}
-                            {...rest}
-                        />
-                    );
-                })}
+                {renderButtons()}
             </div>
         </>
     );
 };
 
-export default memo(CheckoutButtonList);
+function mapToCheckoutButtonListProps({
+  checkoutState,
+  checkoutService,
+}: CheckoutContextProps): WithCheckoutCheckoutButtonListProps | null {
+    return {
+        checkoutService,
+        checkoutState,
+    };
+}
+
+export default memo(withCheckout(mapToCheckoutButtonListProps)(CheckoutButtonList));

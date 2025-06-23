@@ -1,10 +1,15 @@
+/* istanbul ignore file */
+
+// TODO: CHECKOUT-9010 Cover 'Customer registration failure due to using an existing email' in functional tests repo
 import { FormField } from '@bigcommerce/checkout-sdk';
+import classNames from 'classnames';
 import { FormikProps, withFormik } from 'formik';
 import { noop } from 'lodash';
 import React, { FunctionComponent, useMemo } from 'react';
 
 import { preventDefault } from '@bigcommerce/checkout/dom-utils';
 import { TranslatedString, withLanguage, WithLanguageProps } from '@bigcommerce/checkout/locale';
+import { useStyleContext } from '@bigcommerce/checkout/payment-integration-api';
 
 import { isRequestError } from '../common/error';
 import { Alert, AlertType } from '../ui/alert';
@@ -15,22 +20,59 @@ import getCreateCustomerValidationSchema, {
     CreateAccountFormValues,
 } from './getCreateCustomerValidationSchema';
 import getPasswordRequirements from './getPasswordRequirements';
+
 import './CreateAccountForm.scss';
 
 export interface CreateAccountFormProps {
     formFields: FormField[];
     createAccountError?: Error;
+    fixNewsletterCheckboxExperimentEnabled: boolean;
     isCreatingAccount?: boolean;
     isExecutingPaymentMethodCheckout?: boolean;
     requiresMarketingConsent: boolean;
+    defaultShouldSubscribe: boolean;
     isFloatingLabelEnabled?: boolean;
     onCancel?(): void;
     onSubmit(values: CreateAccountFormValues): void;
 }
 
+function getAcceptsMarketingEmailsDefault(defaultShouldSubscribe: boolean, requiresMarketingConsent: boolean): string[] {
+    if (defaultShouldSubscribe) {
+        return ['1'];
+    }
+
+    return requiresMarketingConsent ? [] : ['0'];
+}
+
+function transformFormFieldsData(formFields: FormField[], defaultShouldSubscribe: boolean): FormField[] {
+    return formFields.map(field => {
+        if (field.name === 'acceptsMarketingEmails') {
+            const { options } = field;
+            const items = options?.items || [];
+
+            const updatedItems = items.map(item => {
+                return {
+                    value: defaultShouldSubscribe ? '1' : item.value,
+                    label: item.label,
+                }
+            });
+
+            return {
+                ...field,
+                options: {
+                    items: updatedItems,
+                }
+            }
+        }
+
+        return field;
+    });
+}
+
 const CreateAccountForm: FunctionComponent<
     CreateAccountFormProps & WithLanguageProps & FormikProps<CreateAccountFormValues>
-> = ({ formFields, createAccountError, isCreatingAccount, isExecutingPaymentMethodCheckout, onCancel, isFloatingLabelEnabled }) => {
+> = ({ fixNewsletterCheckboxExperimentEnabled, formFields, createAccountError, isCreatingAccount, isExecutingPaymentMethodCheckout, onCancel, isFloatingLabelEnabled, defaultShouldSubscribe }) => {
+    const { newFontStyle } = useStyleContext();
     const createAccountErrorMessage = useMemo(() => {
         if (!createAccountError) {
             return;
@@ -54,6 +96,9 @@ const CreateAccountForm: FunctionComponent<
         return createAccountError.message;
     }, [createAccountError]);
 
+    const fields = fixNewsletterCheckboxExperimentEnabled ?
+        transformFormFieldsData(formFields, defaultShouldSubscribe): formFields;
+
     return (
         <Form
             className="checkout-form"
@@ -65,13 +110,14 @@ const CreateAccountForm: FunctionComponent<
                     <Alert type={AlertType.Error}>{createAccountErrorMessage}</Alert>
                 )}
                 <div className="create-account-form">
-                    {formFields.map((field) => (
+                    {fields.map((field) => (
                         <DynamicFormField
                             autocomplete={field.name}
                             extraClass={`dynamic-form-field--${field.name}`}
                             field={field}
                             isFloatingLabelEnabled={isFloatingLabelEnabled}
                             key={field.id}
+                            newFontStyle={newFontStyle}
                             parentFieldName={field.custom ? 'customFields' : undefined}
                         />
                     ))}
@@ -80,9 +126,10 @@ const CreateAccountForm: FunctionComponent<
 
             <div className="form-actions">
                 <Button
+                    className={newFontStyle ? 'body-bold' : ''}
                     disabled={isCreatingAccount || isExecutingPaymentMethodCheckout}
-                    isLoading={isCreatingAccount || isExecutingPaymentMethodCheckout}
                     id="checkout-customer-create"
+                    isLoading={isCreatingAccount || isExecutingPaymentMethodCheckout}
                     testId="customer-continue-create"
                     type="submit"
                     variant={ButtonVariant.Primary}
@@ -91,7 +138,8 @@ const CreateAccountForm: FunctionComponent<
                 </Button>
 
                 <a
-                    className="button optimizedCheckout-buttonSecondary"
+                    className={classNames('button optimizedCheckout-buttonSecondary',
+                        { 'body-bold': newFontStyle })}
                     data-test="customer-cancel-button"
                     href="#"
                     id="checkout-customer-cancel"
@@ -109,13 +157,13 @@ export default withLanguage(
         handleSubmit: (values, { props: { onSubmit = noop } }) => {
             onSubmit(values);
         },
-        mapPropsToValues: ({ requiresMarketingConsent }) => ({
+        mapPropsToValues: ({ defaultShouldSubscribe, requiresMarketingConsent }) => ({
             firstName: '',
             lastName: '',
             email: '',
             password: '',
             customFields: {},
-            acceptsMarketingEmails: requiresMarketingConsent ? [] : ['0'],
+            acceptsMarketingEmails: getAcceptsMarketingEmailsDefault(defaultShouldSubscribe, requiresMarketingConsent),
         }),
         validationSchema: ({
             language,

@@ -10,8 +10,9 @@ import React, { RefObject, useRef, useState } from 'react';
 import { lazy } from 'yup';
 
 import { TranslatedString, withLanguage, WithLanguageProps } from '@bigcommerce/checkout/locale';
-import { usePayPalConnectAddress } from '@bigcommerce/checkout/paypal-connect-integration';
-import { AddressFormSkeleton } from '@bigcommerce/checkout/ui';
+import { useStyleContext } from '@bigcommerce/checkout/payment-integration-api';
+import { usePayPalFastlaneAddress } from '@bigcommerce/checkout/paypal-fastlane-integration';
+import { AddressFormSkeleton, LoadingOverlay } from '@bigcommerce/checkout/ui';
 
 import {
     AddressForm,
@@ -27,7 +28,6 @@ import { getCustomFormFieldsValidationSchema } from '../formFields';
 import { OrderComments } from '../orderComments';
 import { Button, ButtonVariant } from '../ui/button';
 import { Fieldset, Form } from '../ui/form';
-import { LoadingOverlay } from '../ui/loading';
 
 import StaticBillingAddress from './StaticBillingAddress';
 
@@ -68,15 +68,16 @@ const BillingForm = ({
 }: BillingFormProps & WithLanguageProps & FormikProps<BillingFormValues>) => {
     const [isResettingAddress, setIsResettingAddress] = useState(false);
     const addressFormRef: RefObject<HTMLFieldSetElement> = useRef(null);
-    const { isPayPalAxoEnabled, mergedBcAndPayPalConnectAddresses } = usePayPalConnectAddress();
+    const { isPayPalFastlaneEnabled, paypalFastlaneAddresses } = usePayPalFastlaneAddress();
 
+    const { newFontStyle } = useStyleContext();
     const shouldRenderStaticAddress = methodId === 'amazonpay';
     const allFormFields = getFields(values.countryCode);
     const customFormFields = allFormFields.filter(({ custom }) => custom);
     const hasCustomFormFields = customFormFields.length > 0;
     const editableFormFields =
         shouldRenderStaticAddress && hasCustomFormFields ? customFormFields : allFormFields;
-    const billingAddresses = isPayPalAxoEnabled ? mergedBcAndPayPalConnectAddresses : addresses;
+    const billingAddresses = isPayPalFastlaneEnabled ? paypalFastlaneAddresses : addresses;
     const hasAddresses = billingAddresses?.length > 0;
     const hasValidCustomerAddress =
         billingAddress &&
@@ -149,6 +150,7 @@ const BillingForm = ({
 
             <div className="form-actions">
                 <Button
+                    className={newFontStyle ? 'body-bold' : ''}
                     disabled={isUpdating || isResettingAddress}
                     id="checkout-billing-continue"
                     isLoading={isUpdating || isResettingAddress}

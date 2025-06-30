@@ -1,8 +1,7 @@
 import React, { PureComponent, ReactNode } from 'react';
 
 import { TranslatedHtml } from '@bigcommerce/checkout/locale';
-
-import { LoadingOverlay } from '../ui/loading';
+import { LoadingOverlay } from '@bigcommerce/checkout/ui';
 
 export interface EmptyCartMessageProps {
     waitInterval?: number;
@@ -26,6 +25,7 @@ export default class EmptyCartMessage extends PureComponent<
     componentDidMount(): void {
         const { waitInterval } = this.props;
 
+        // @ts-ignore
         this.waitToken = setTimeout(() => {
             this.setState({ isWaiting: false });
         }, waitInterval);

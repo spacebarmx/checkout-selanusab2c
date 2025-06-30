@@ -4,6 +4,7 @@ import { Field, FieldProps, Formik } from 'formik';
 import { noop } from 'lodash';
 import React from 'react';
 import { Omit } from 'utility-types';
+import { config } from 'yargs';
 
 import {
     createLocaleContext,
@@ -12,7 +13,12 @@ import {
 } from '@bigcommerce/checkout/locale';
 import { getInstruments, getStoreConfig } from '@bigcommerce/checkout/test-mocks';
 
-import { isAccountInstrument, isAchInstrument, isBankAccountInstrument } from '../../guards';
+import {
+    isAccountInstrument,
+    isAchInstrument,
+    isBankAccountInstrument,
+    isSepaInstrument,
+} from '../../guards';
 
 import AccountInstrumentSelect, { AccountInstrumentSelectProps } from './AccountInstrumentSelect';
 
@@ -157,7 +163,7 @@ describe('AccountInstrumentSelect', () => {
     });
 
     it('cleans the instrumentId when the component unmounts', async () => {
-        jest.useFakeTimers();
+        jest.useFakeTimers({ legacyFakeTimers: true });
 
         const submit = jest.fn();
 
@@ -263,9 +269,31 @@ describe('AccountInstrumentSelect', () => {
 
         expect(screen.getByTestId('instrument-select-menu')).toBeInTheDocument();
 
-        expect(screen.getByText('ACH')).toBeInTheDocument();
+        expect(screen.getAllByText('ACH')[0]).toBeInTheDocument();
         expect(screen.getByText('Account number ending in: 0000')).toBeInTheDocument();
         expect(screen.getByText('Routing Number: 011000015')).toBeInTheDocument();
+    });
+
+    it('shows list of instruments when clicked and is an SEPA instrument', async () => {
+        defaultProps.instruments = getInstruments().filter(isSepaInstrument);
+
+        render(
+            <LocaleContext.Provider value={localeContext}>
+                <Formik initialValues={initialValues} onSubmit={noop}>
+                    <Field
+                        name="instrumentId"
+                        render={(field: FieldProps<string>) => (
+                            <AccountInstrumentSelect {...field} {...defaultProps} />
+                        )}
+                    />
+                </Formik>
+            </LocaleContext.Provider>,
+        );
+
+        await userEvent.click(screen.getByTestId('instrument-select'));
+
+        expect(screen.getByTestId('instrument-select-menu')).toBeInTheDocument();
+        expect(screen.getByText('Account Number (IBAN): DE133123xx111')).toBeInTheDocument();
     });
 
     it('notifies parent when instrument is selected and is an account instrument', async () => {

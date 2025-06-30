@@ -9,11 +9,12 @@ export interface CheckboxInputProps extends InputProps {
     label: ReactNode;
     value: string;
     checked: boolean;
+    newFontStyle?: boolean;
 }
 
 const CheckboxInput = forwardRef(
     (
-        { additionalClassName, label, id, testId, ...rest }: CheckboxInputProps,
+        { additionalClassName, label, id, testId, newFontStyle = false, ...rest }: CheckboxInputProps,
         ref: Ref<HTMLInputElement>,
     ) => (
         <>
@@ -26,10 +27,10 @@ const CheckboxInput = forwardRef(
                 )}
                 id={id}
                 ref={ref}
-                type="checkbox"
                 testId={testId}
+                type="checkbox"
             />
-            <Label htmlFor={id}>{label}</Label>
+            <Label additionalClassName={`${newFontStyle ? 'body-regular' : ''}`} htmlFor={id}>{label}</Label>
         </>
     ),
 );

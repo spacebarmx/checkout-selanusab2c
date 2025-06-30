@@ -7,19 +7,21 @@ import {
     Consignment,
     EmbeddedCheckoutMessenger,
     EmbeddedCheckoutMessengerOptions,
+    ExtensionRegion,
     FlashMessage,
+    PaymentMethod,
     Promotion,
-    RequestOptions,
-} from '@bigcommerce/checkout-sdk';
+ RequestOptions } from '@bigcommerce/checkout-sdk';
 import classNames from 'classnames';
 import { find, findIndex } from 'lodash';
 import React, { Component, lazy, ReactNode } from 'react';
 
 import { AnalyticsContextProps } from '@bigcommerce/checkout/analytics';
-import { ExtensionContextProps, withExtension } from '@bigcommerce/checkout/checkout-extension';
+import { Extension, ExtensionContextProps, withExtension } from '@bigcommerce/checkout/checkout-extension';
 import { ErrorLogger } from '@bigcommerce/checkout/error-handling-utils';
 import { TranslatedString, withLanguage, WithLanguageProps } from '@bigcommerce/checkout/locale';
-import { AddressFormSkeleton, ChecklistSkeleton } from '@bigcommerce/checkout/ui';
+import { AddressFormSkeleton, ChecklistSkeleton , LazyContainer, LoadingNotification, LoadingOverlay } from '@bigcommerce/checkout/ui';
+import { navigateToOrderConfirmation } from '@bigcommerce/checkout/utility';
 
 import { withAnalytics } from '../analytics';
 import { StaticBillingAddress } from '../billing';
@@ -35,11 +37,12 @@ import {
     CustomerSignOutEvent,
     CustomerViewType,
 } from '../customer';
+import { getSupportedMethodIds } from '../customer/getSupportedMethods';
+import { SubscribeSessionStorage } from '../customer/SubscribeSessionStorage';
 import { EmbeddedCheckoutStylesheet, isEmbedded } from '../embeddedCheckout';
 import { PromotionBannerList } from '../promotion';
-import { hasSelectedShippingOptions, isUsingMultiShipping, StaticConsignment } from '../shipping';
+import { hasSelectedShippingOptions, isUsingMultiShipping, ShippingSummary } from '../shipping';
 import { ShippingOptionExpiredError } from '../shipping/shippingOption';
-import { LazyContainer, LoadingNotification, LoadingOverlay } from '../ui/loading';
 import { MobileView } from '../ui/responsive';
 
 import CheckoutStep from './CheckoutStep';
@@ -47,7 +50,6 @@ import CheckoutStepStatus from './CheckoutStepStatus';
 import CheckoutStepType from './CheckoutStepType';
 import CheckoutSupport from './CheckoutSupport';
 import mapToCheckoutProps from './mapToCheckoutProps';
-import navigateToOrderConfirmation from './navigateToOrderConfirmation';
 
 const Billing = lazy(() =>
     retry(
@@ -119,8 +121,8 @@ export interface CheckoutState {
     isCartEmpty: boolean;
     isRedirecting: boolean;
     hasSelectedShippingOptions: boolean;
-    isHidingStepNumbers: boolean;
     isSubscribed: boolean;
+    buttonConfigs: PaymentMethod[];
 }
 
 export interface WithCheckoutProps {
@@ -135,6 +137,7 @@ export interface WithCheckoutProps {
     isPending: boolean;
     isPriceHiddenFromGuests: boolean;
     isShowingWalletButtonsOnTop: boolean;
+    isShippingDiscountDisplayEnabled: boolean;
     loginUrl: string;
     cartUrl: string;
     createAccountUrl: string;
@@ -142,6 +145,7 @@ export interface WithCheckoutProps {
     steps: CheckoutStepStatus[];
     clearError(error?: Error): void;
     loadCheckout(id: string, options?: RequestOptions<CheckoutParams>): Promise<CheckoutSelectors>;
+    loadPaymentMethodByIds(methodIds: string[]): Promise<CheckoutSelectors>;
     subscribeToConsignments(subscriber: (state: CheckoutSelectors) => void): () => void;
 }
 
@@ -159,8 +163,8 @@ class Checkout extends Component<
         isRedirecting: false,
         isMultiShippingMode: false,
         hasSelectedShippingOptions: false,
-        isHidingStepNumbers: true,
         isSubscribed: false,
+        buttonConfigs: [],
     };
 
     private embeddedMessenger?: EmbeddedCheckoutMessenger;
@@ -176,6 +180,12 @@ class Checkout extends Component<
         this.handleBeforeExit();
     }
 
+    componentDidUpdate(prevProps: WithCheckoutProps): void {
+        if(prevProps.steps.length === 0 && this.props.steps && this.props.steps.length > 0) {
+            this.handleReady();
+        }
+    }
+
     async componentDidMount(): Promise<void> {
         const {
             analyticsTracker,
@@ -185,6 +195,7 @@ class Checkout extends Component<
             embeddedStylesheet,
             extensionService,
             loadCheckout,
+            loadPaymentMethodByIds,
             subscribeToConsignments,
         } = this.props;
 
@@ -197,6 +208,20 @@ class Checkout extends Component<
                     ] as any, // FIXME: Currently the enum is not exported so it can't be used here.
                 },
             }), extensionService.loadExtensions()]);
+
+            const providers = data.getConfig()?.checkoutSettings?.remoteCheckoutProviders || [];
+            const checkoutSettings = data.getConfig()?.checkoutSettings;
+
+            const supportedProviders = getSupportedMethodIds(providers, checkoutSettings);
+
+            if (providers.length > 0) {
+                const configs = await loadPaymentMethodByIds(supportedProviders);
+
+                this.setState({
+                    buttonConfigs: configs.data.getPaymentMethods() || [],
+                });
+            }
+
             extensionService.preloadExtensions();
 
             const { links: { siteLink = '' } = {} } = data.getConfig() || {};
@@ -236,9 +261,6 @@ class Checkout extends Component<
                 data.getConfig()?.checkoutSettings.hasMultiShippingEnabled;
             const checkoutBillingSameAsShippingEnabled =
                 data.getConfig()?.checkoutSettings.checkoutBillingSameAsShippingEnabled ?? true;
-            const removeStepNumbersFlag =
-              data.getConfig()?.checkoutSettings.features['CHECKOUT-7255.remove_checkout_step_numbers'] ??
-              false;
             const defaultNewsletterSignupOption =
                 data.getConfig()?.shopperConfig.defaultNewsletterSignup ??
                 false;
@@ -250,14 +272,11 @@ class Checkout extends Component<
 
             this.setState({
                 isBillingSameAsShipping: checkoutBillingSameAsShippingEnabled,
-                isHidingStepNumbers: removeStepNumbersFlag,
                 isSubscribed: defaultNewsletterSignupOption,
             });
 
             if (isMultiShippingMode) {
-                this.setState({ isMultiShippingMode }, this.handleReady);
-            } else {
-                this.handleReady();
+                this.setState({ isMultiShippingMode });
             }
 
             window.addEventListener('beforeunload', this.handleBeforeExit);
@@ -270,7 +289,7 @@ class Checkout extends Component<
     }
 
     render(): ReactNode {
-        const { error, isHidingStepNumbers } = this.state;
+        const { error } = this.state;
         let errorModal = null;
 
         if (error) {
@@ -288,7 +307,7 @@ class Checkout extends Component<
         }
 
         return (
-            <div className={classNames({ 'is-embedded': isEmbedded(), 'remove-checkout-step-numbers': isHidingStepNumbers })}>
+            <div className={classNames('remove-checkout-step-numbers', { 'is-embedded': isEmbedded() })} data-test="checkout-page-container" id="checkout-page-container">
                 <div className="layout optimizedCheckout-contentPrimary">
                     {this.renderContent()}
                 </div>
@@ -315,13 +334,15 @@ class Checkout extends Component<
                 <div className="layout-main">
                     <LoadingNotification isLoading={(!isShowingWalletButtonsOnTop && isPending) || extensionState.isShowingLoadingIndicator} />
 
+                    {/* <Extension region={ExtensionRegion.GlobalWebWorker} /> */}
                     <PromotionBannerList promotions={promotions} />
 
-                    {isShowingWalletButtonsOnTop && (
+                    {isShowingWalletButtonsOnTop && this.state.buttonConfigs?.length > 0 && (
                         <CheckoutButtonContainer
                             checkEmbeddedSupport={this.checkEmbeddedSupport}
                             isPaymentStepActive={isPaymentStepActive}
                             onUnhandledError={this.handleUnhandledError}
+                            onWalletButtonClick={this.handleWalletButtonClick}
                         />
                     )}
 
@@ -400,6 +421,7 @@ class Checkout extends Component<
                     onSignInError={this.handleError}
                     onSubscribeToNewsletter={this.handleNewsletterSubscription}
                     onUnhandledError={this.handleUnhandledError}
+                    onWalletButtonClick={this.handleWalletButtonClick}
                     step={step}
                     viewType={customerViewType}
                 />
@@ -408,12 +430,15 @@ class Checkout extends Component<
     }
 
     private renderShippingStep(step: CheckoutStepStatus): ReactNode {
-        const { hasCartChanged, cart, consignments = [] } = this.props;
-
+        const { hasCartChanged, cart, consignments = [], isShippingDiscountDisplayEnabled } = this.props;
         const { isBillingSameAsShipping, isMultiShippingMode } = this.state;
 
         if (!cart) {
             return;
+        }
+
+        const setIsMultishippingMode = (value: boolean) => {
+            this.setState({ isMultiShippingMode: value });
         }
 
         return (
@@ -423,15 +448,7 @@ class Checkout extends Component<
                 key={step.type}
                 onEdit={this.handleEditStep}
                 onExpanded={this.handleExpanded}
-                summary={consignments.map((consignment) => (
-                    <div className="staticConsignmentContainer" key={consignment.id}>
-                        <StaticConsignment
-                            cart={cart}
-                            compactView={consignments.length < 2}
-                            consignment={consignment}
-                        />
-                    </div>
-                ))}
+                summary={<ShippingSummary cart={cart} consignments={consignments} isMultiShippingMode={isMultiShippingMode} isShippingDiscountDisplayEnabled={isShippingDiscountDisplayEnabled}/>}
             >
                 <LazyContainer loadingSkeleton={<AddressFormSkeleton />}>
                     <Shipping
@@ -444,6 +461,7 @@ class Checkout extends Component<
                         onSignIn={this.handleShippingSignIn}
                         onToggleMultiShipping={this.handleToggleMultiShipping}
                         onUnhandledError={this.handleUnhandledError}
+                        setIsMultishippingMode={setIsMultishippingMode}
                         step={step}
                     />
                 </LazyContainer>
@@ -508,13 +526,16 @@ class Checkout extends Component<
     }
 
     private renderCartSummary(): ReactNode {
+        const { isMultiShippingMode } = this.state;
+
         return (
             <MobileView>
                 {(matched) => {
                     if (matched) {
                         return (
                             <LazyContainer>
-                                <CartSummaryDrawer />
+                                <Extension region={ExtensionRegion.SummaryAfter} />
+                                <CartSummaryDrawer isMultiShippingMode={isMultiShippingMode} />
                             </LazyContainer>
                         );
                     }
@@ -522,7 +543,8 @@ class Checkout extends Component<
                     return (
                         <aside className="layout-cart">
                             <LazyContainer>
-                                <CartSummary />
+                                <CartSummary isMultiShippingMode={isMultiShippingMode} />
+                                <Extension region={ExtensionRegion.SummaryAfter} />
                             </LazyContainer>
                         </aside>
                     );
@@ -589,6 +611,8 @@ class Checkout extends Component<
         if (this.embeddedMessenger) {
             this.embeddedMessenger.postComplete();
         }
+
+        SubscribeSessionStorage.removeSubscribeStatus();
 
         this.setState({ isRedirecting: true }, () => {
             navigateToOrderConfirmation(orderId);
@@ -745,6 +769,12 @@ class Checkout extends Component<
         const { analyticsTracker } = this.props;
 
         analyticsTracker.exitCheckout();
+    }
+
+    private handleWalletButtonClick: (methodName: string) => void = (methodName) => {
+        const { analyticsTracker } = this.props;
+
+        analyticsTracker.walletButtonClick(methodName);
     }
 }
 

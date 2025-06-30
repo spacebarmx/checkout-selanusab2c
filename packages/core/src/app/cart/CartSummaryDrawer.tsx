@@ -8,14 +8,21 @@ import EditLink from './EditLink';
 import mapToCartSummaryProps from './mapToCartSummaryProps';
 import withRedeemable from './withRedeemable';
 
-const CartSummaryDrawer: FunctionComponent<WithCheckoutCartSummaryProps> = ({
-    cartUrl,
-    ...props
-}) =>
+const CartSummaryDrawer: FunctionComponent<
+    WithCheckoutCartSummaryProps & {
+        isMultiShippingMode: boolean;
+    }
+    > = ({ cartUrl, isMultiShippingMode, ...props }) =>
     withRedeemable(OrderSummaryDrawer)({
         ...props,
         cartUrl,
-        headerLink: <EditLink className="modal-header-link cart-modal-link" url={cartUrl} />,
+        headerLink: (
+            <EditLink
+                className="modal-header-link cart-modal-link"
+                isMultiShippingMode={isMultiShippingMode}
+                url={cartUrl}
+            />
+        ),
     });
 
 export default withCheckout(mapToCartSummaryProps)(memo(CartSummaryDrawer));

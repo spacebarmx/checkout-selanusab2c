@@ -1,9 +1,9 @@
-import React, { ReactNode } from 'react';
+import { Component, ReactNode } from 'react';
 
 import ErrorLogger from './ErrorLogger';
 
 export interface ErrorBoundaryProps {
-    children: ReactNode;
+    children?: ReactNode;
     fallback?: ReactNode;
     logger?: ErrorLogger;
     filter?(error: Error): boolean;
@@ -13,7 +13,7 @@ interface ErrorBoundaryState {
     error?: Error;
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     static getDerivedStateFromError(error: Error): ErrorBoundaryState {
         return { error };
     }

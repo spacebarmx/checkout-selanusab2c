@@ -2,7 +2,7 @@ import { CustomerInitializeOptions, CustomerRequestOptions } from "@bigcommerce/
 import React, { FunctionComponent } from "react";
 
 import CheckoutButton from "./CheckoutButton";
-import { AmazonPayV2Button, ApplePayButton, PayPalCommerceButton } from "./customWalletButton";
+import { ApplePayButton, PayPalCommerceButton } from "./customWalletButton";
 
 interface CheckoutButtonV1ResolverProps {
     methodId: string;
@@ -10,6 +10,7 @@ interface CheckoutButtonV1ResolverProps {
     isShowingWalletButtonsOnTop?: boolean;
     initialize(options: CustomerInitializeOptions): void;
     onError?(error: Error): void;
+    onClick?(methodName: string): void;
 }
 
 const CheckoutButtonV1Resolver: FunctionComponent<CheckoutButtonV1ResolverProps> = ({
@@ -22,17 +23,6 @@ const CheckoutButtonV1Resolver: FunctionComponent<CheckoutButtonV1ResolverProps>
         case 'applepay':
             return (
                 <ApplePayButton
-                    containerId={`${methodId}CheckoutButton`}
-                    key={methodId}
-                    methodId={methodId}
-                    onError={onError}
-                    {...rest}
-                />
-            );
-
-        case 'amazonpay':
-            return (
-                <AmazonPayV2Button
                     containerId={`${methodId}CheckoutButton`}
                     key={methodId}
                     methodId={methodId}

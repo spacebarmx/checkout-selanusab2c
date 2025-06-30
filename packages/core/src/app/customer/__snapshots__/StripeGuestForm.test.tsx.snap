@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`StripeGuestForm matches snapshot 1`] = `
-Object {
+{
   "asFragment": [Function],
   "baseElement": <body>
     <div>
@@ -36,6 +36,7 @@ Object {
       </div>
       <div>
         <form
+          action="#"
           class="checkout-form"
           data-test="checkout-customer-guest"
           id="checkout-customer-guest"
@@ -107,6 +108,8 @@ Object {
                   <a
                     data-test="customer-continue-button"
                     id="checkout-customer-login"
+                    role="button"
+                    tabindex="0"
                   >
                     Sign in now
                   </a>
@@ -117,7 +120,6 @@ Object {
           <div
             class="optimizedCheckout-form-input"
             id="stripe-card-component-field--input"
-            placeholder="1111"
           >
             <div
               class="form-field--error"
@@ -168,6 +170,7 @@ Object {
     </div>
     <div>
       <form
+        action="#"
         class="checkout-form"
         data-test="checkout-customer-guest"
         id="checkout-customer-guest"
@@ -239,6 +242,8 @@ Object {
                 <a
                   data-test="customer-continue-button"
                   id="checkout-customer-login"
+                  role="button"
+                  tabindex="0"
                 >
                   Sign in now
                 </a>
@@ -249,7 +254,6 @@ Object {
         <div
           class="optimizedCheckout-form-input"
           id="stripe-card-component-field--input"
-          placeholder="1111"
         >
           <div
             class="form-field--error"

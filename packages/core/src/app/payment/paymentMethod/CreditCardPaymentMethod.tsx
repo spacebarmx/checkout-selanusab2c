@@ -16,11 +16,11 @@ import { ObjectSchema } from 'yup';
 import { MapToPropsFactory } from '@bigcommerce/checkout/legacy-hoc';
 import { withLanguage, WithLanguageProps } from '@bigcommerce/checkout/locale';
 import { CheckoutContextProps, PaymentFormValues } from '@bigcommerce/checkout/payment-integration-api';
+import { LoadingOverlay } from '@bigcommerce/checkout/ui';
 
 import { withCheckout } from '../../checkout';
 import { connectFormik, ConnectFormikProps } from '../../common/form';
 import { withForm, WithFormProps } from '../../ui/form';
-import { LoadingOverlay } from '../../ui/loading';
 import {
     configureCardValidator,
     CreditCardFieldset,
@@ -76,6 +76,7 @@ interface CreditCardPaymentMethodState {
     focusedHostedFieldType?: HostedFieldType;
     isAddingNewCard: boolean;
     selectedInstrumentId?: string;
+    isPreloaderOn: boolean;
 }
 
 class CreditCardPaymentMethod extends Component<
@@ -89,6 +90,7 @@ class CreditCardPaymentMethod extends Component<
 > {
     state: CreditCardPaymentMethodState = {
         isAddingNewCard: false,
+        isPreloaderOn: true,
     };
 
     async componentDidMount(): Promise<void> {
@@ -115,7 +117,7 @@ class CreditCardPaymentMethod extends Component<
                     methodId: method.id,
                 },
                 this.getSelectedInstrument(),
-            );
+            ).then(() => this.setState({ isPreloaderOn: false }));
         } catch (error) {
             onUnhandledError(error);
         }
@@ -174,6 +176,7 @@ class CreditCardPaymentMethod extends Component<
                     },
                     this.getSelectedInstrument(),
                 );
+
             } catch (error) {
                 onUnhandledError(error);
             }
@@ -194,11 +197,11 @@ class CreditCardPaymentMethod extends Component<
             method,
         } = this.props;
 
-        const { isAddingNewCard } = this.state;
+        const { isAddingNewCard, isPreloaderOn } = this.state;
 
         const selectedInstrument = this.getSelectedInstrument();
         const shouldShowCreditCardFieldset = !shouldShowInstrumentFieldset || isAddingNewCard;
-        const isLoading = isInitializing || isLoadingInstruments;
+        const isLoading = isInitializing || isLoadingInstruments || isPreloaderOn;
         const shouldShowNumberField = selectedInstrument
             ? isInstrumentCardNumberRequiredProp(selectedInstrument)
             : false;
@@ -376,7 +379,7 @@ const mapFromCheckoutProps: MapToPropsFactory<
     );
 
     return (context, props) => {
-        const { isUsingMultiShipping = false, method } = props;
+        const { method } = props;
 
         const { checkoutService, checkoutState } = context;
 
@@ -396,7 +399,6 @@ const mapFromCheckoutProps: MapToPropsFactory<
         const isInstrumentFeatureAvailableProp = isInstrumentFeatureAvailable({
             config,
             customer,
-            isUsingMultiShipping,
             paymentMethod: method,
         });
 

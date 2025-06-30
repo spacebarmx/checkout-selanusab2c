@@ -4,7 +4,6 @@ import { preventDefault } from '@bigcommerce/checkout/dom-utils';
 import { TranslatedString, withLanguage, WithLanguageProps } from '@bigcommerce/checkout/locale';
 import { useStyleContext } from '@bigcommerce/checkout/payment-integration-api';
 
-
 import { AddressSelectProps } from './AddressSelect';
 import SingleLineStaticAddress from './SingleLineStaticAddress';
 import StaticAddress from './StaticAddress';
@@ -36,8 +35,8 @@ const AddressSelectButton: FunctionComponent<AddressSelectButtonProps & WithLang
     return (
         <a
             aria-controls="addressDropdown"
-            aria-describedby={language.translate('address.enter_or_select_address_action')}
             aria-expanded={ariaExpanded}
+            aria-label={language.translate('address.enter_or_select_address_action')}
             className="button dropdown-button dropdown-toggle--select"
             data-test="address-select-button"
             href="#"

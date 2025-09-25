@@ -37,11 +37,11 @@ const ShippingOptionListItem: FunctionComponent<ShippingOptionListItemProps> = (
     );
 
     return (
-        <ChecklistItem
-            htmlId={`shippingOptionRadio-${consignmentId}-${shippingOption.id}`}
-            label={renderLabel}
-            value={shippingOption.id}
-        />
+      <ChecklistItem
+        htmlId={`shippingOptionRadio-${consignmentId}-${shippingOption.id}`}
+        label={renderLabel}
+        value={shippingOption.id}
+      />
     );
 };
 

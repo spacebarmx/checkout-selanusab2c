@@ -52,7 +52,7 @@ const StaticShippingOption: React.FunctionComponent<StaticShippingOptionProps> =
                 </span>
             )}
             <span className={classNames('shippingOption-desc', { 'body-medium': themeV2 })}>
-                {method.description}
+                {method.description === 'Free Shipping' ? 'Envío gratis' : method.description}
                 {method.transitTime && (
                     <span className="shippingOption-transitTime">{method.transitTime}</span>
                 )}

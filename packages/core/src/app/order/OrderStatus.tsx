@@ -62,6 +62,14 @@ const OrderStatus: FunctionComponent<OrderStatusProps> = ({
                     />
                 </p>
             )}
+
+            <p className='billing-text'>
+                Solicitar factura{' '}
+                <a href="https://omega.selanusa.com.mx/formulario/factura" rel="noreferrer" target="_blank">
+                    <b>aquí</b>
+                </a>
+            </p>
+
         </OrderConfirmationSection>
     );
 };

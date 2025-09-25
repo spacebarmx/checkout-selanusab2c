@@ -12,6 +12,7 @@ build
 coverage
 /dist-tools
 /packages/**/generated
-/packages/test-framework/report
-/packages/test-framework/screenshots
-/packages/test-framework/videos
+/packages/payment-integration-test-framework/report
+/packages/payment-integration-test-framework/screenshots
+/packages/payment-integration-test-framework/videos
+dist/*

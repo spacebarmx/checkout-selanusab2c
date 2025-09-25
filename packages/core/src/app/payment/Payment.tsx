@@ -1,5 +1,6 @@
 import {
     type CartChangedError,
+    type CheckoutRequestBody,
     type CheckoutSelectors,
     type CheckoutService,
     type CheckoutSettings,

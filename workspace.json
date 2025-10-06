@@ -32,6 +32,7 @@
     "moneris-integration": "packages/moneris-integration",
     "offline-payment-integration": "packages/offline-payment-integration",
     "payment-integration-api": "packages/payment-integration-api",
+    "kuesky-commerce-integration": "packages/kuesky-commerce-integration",
     "paypal-commerce-integration": "packages/paypal-commerce-integration",
     "paypal-express-integration": "packages/paypal-express-integration",
     "paypal-fastlane-integration": "packages/paypal-fastlane-integration",

@@ -1,4 +1,5 @@
 const CircularDependencyPlugin = require('circular-dependency-plugin');
+const dotenv = require('dotenv');
 const EventEmitter = require('events');
 const { copyFileSync } = require('fs');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -26,11 +27,17 @@ const {
     transformManifest,
 } = require('./scripts/webpack');
 
+const env = dotenv.config().parsed;
 const ENTRY_NAME = 'checkout';
 const LIBRARY_NAME = 'checkout';
 const AUTO_LOADER_ENTRY_NAME = 'auto-loader';
 const LOADER_ENTRY_NAME = 'loader';
 const LOADER_LIBRARY_NAME = 'checkoutLoader';
+const envKeys = Object.keys(env).reduce((prev, next) => {
+    prev[`process.env.${next}`] = JSON.stringify(env[next]);
+
+    return prev;
+}, {});
 const PRELOAD_ASSETS = ['billing', 'shipping', 'payment'];
 
 const eventEmitter = new EventEmitter();
@@ -117,6 +124,7 @@ function appConfig(options, argv) {
                 crossOriginLoading: 'anonymous',
             },
             plugins: [
+                new DefinePlugin(envKeys),
                 new SubresourceIntegrityPlugin({
                     hashFuncNames: ['sha256'],
                     enabled: isProduction,

@@ -57,6 +57,7 @@ const PaymentMethodComponent: FunctionComponent<
     if (
         method.id === PaymentMethodId.Humm ||
         method.id === PaymentMethodId.Laybuy ||
+        method.method === PaymentMethodType.Kueski ||
         method.method === PaymentMethodType.Paypal ||
         method.method === PaymentMethodType.PaypalCredit ||
         method.type === PaymentMethodProviderType.Hosted

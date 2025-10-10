@@ -306,6 +306,8 @@
             "payment_method_invalid_error": "Si è verificato un problema nell'elaborazione del pagamento. Contattaci per ricevere assistenza o scegli un altro metodo di pagamento.",
             "payment_method_unavailable_error": "Il gestore dei pagamenti non è al momento disponibile. Riprova più tardi.",
             "payment_not_required_text": "Questo ordine non richiede alcun pagamento.",
+            "kueski_complete_action": "Complete order",
+            "kueski_continue_action": "Continue with KueskiPay",
             "paypal_complete_action": "Completa ordine",
             "paypal_continue_action": "Continua con PayPal",
             "paypal_pay_later_complete_action": "Completa ordine",

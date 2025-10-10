@@ -306,6 +306,8 @@
             "payment_method_invalid_error": "Det har oppstått et problem med å behandle betalingen din. Kontakt oss for å få hjelp, eller velg en annen betalingsmåte.",
             "payment_method_unavailable_error": "Denne betalingsleverandøren er midlertidig utilgjengelig. Prøv igjen senere.",
             "payment_not_required_text": "Betaling kreves ikke for denne bestillingen.",
+            "kueski_complete_action": "Complete order",
+            "kueski_continue_action": "Continue with KueskiPay",
             "paypal_complete_action": "Fullfør bestilling",
             "paypal_continue_action": "Fortsett med PayPal",
             "paypal_pay_later_complete_action": "Fullfør bestilling",

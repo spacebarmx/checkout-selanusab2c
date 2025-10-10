@@ -306,6 +306,8 @@
             "payment_method_invalid_error": "Det gick inte att behandla din betalning. Kontakta oss för att få hjälp eller välj en annan betalningsmetod.",
             "payment_method_unavailable_error": "Denna betalningsleverantör är tillfälligt otillgänglig. Försök igen senare.",
             "payment_not_required_text": "Betalning krävs inte för denna beställning.",
+            "kueski_complete_action": "Complete order",
+            "kueski_continue_action": "Continue with KueskiPay",
             "paypal_complete_action": "Slutför beställning",
             "paypal_continue_action": "Fortsätt med PayPal",
             "paypal_pay_later_complete_action": "Slutför beställning",

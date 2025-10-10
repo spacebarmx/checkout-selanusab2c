@@ -83,6 +83,17 @@ const PaymentSubmitButtonText: FunctionComponent<PaymentSubmitButtonTextProps> =
             />;
         }
 
+        if (methodType === PaymentMethodType.Kueski) {
+            const continueActionId = methodId === PaymentMethodId.KueskiCommerce
+                ? 'payment.place_order_action'
+                : 'payment.kueski_continue_action';
+
+            return <TranslatedString
+                data={{ isComplete }}
+                id={isComplete ? 'payment.kueski_complete_action' : continueActionId}
+            />;
+        }
+
         if (methodType === PaymentMethodType.PaypalCredit) {
             const continueTranslationId = brandName
                 ? 'payment.continue_with_brand'

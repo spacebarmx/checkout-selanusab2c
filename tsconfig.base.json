@@ -78,9 +78,6 @@
       "@bigcommerce/checkout/payment-integration-api": [
         "packages/payment-integration-api/src/index.ts"
       ],
-      "@bigcommerce/checkout/kuesky-commerce-integration": [
-        "packages/kuesky-commerce-integration/src/index.ts"
-      ],
       "@bigcommerce/checkout/paypal-commerce-integration": [
         "packages/paypal-commerce-integration/src/index.ts"
       ],

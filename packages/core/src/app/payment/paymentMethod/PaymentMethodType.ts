@@ -6,6 +6,7 @@ enum PaymentMethodType {
     PayWithGoogle = 'paywithgoogle',
     Masterpass = 'masterpass',
     MultiOption = 'multi-option',
+    Kueski = 'kueski',
     Paypal = 'paypal',
     PaypalCredit = 'paypal-credit',
     PaypalVenmo = 'paypal-venmo',

@@ -306,6 +306,8 @@
             "payment_method_invalid_error": "Há um problema no processamento do seu pagamento. Entre em contato conosco para receber ajuda ou escolha outro método de pagamento.",
             "payment_method_unavailable_error": "Este provedor de pagamento está temporariamente indisponível. Tente novamente mais tarde.",
             "payment_not_required_text": "Não é necessário fazer o pagamento deste pedido.",
+            "kueski_complete_action": "Complete order",
+            "kueski_continue_action": "Continue with KueskiPay",
             "paypal_complete_action": "Concluir pedido",
             "paypal_continue_action": "Prosseguir com o PayPal",
             "paypal_pay_later_complete_action": "Concluir pedido",

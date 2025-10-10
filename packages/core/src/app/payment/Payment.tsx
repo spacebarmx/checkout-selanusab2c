@@ -29,6 +29,7 @@ import {
 import { EMPTY_ARRAY } from '../common/utility';
 import { TermsConditionsType } from '../termsConditions';
 
+import { KueskiMethod } from './kueski';
 import mapSubmitOrderErrorMessage, { mapSubmitOrderErrorTitle } from './mapSubmitOrderErrorMessage';
 import mapToOrderRequestBody from './mapToOrderRequestBody';
 import PaymentContext from './PaymentContext';
@@ -37,6 +38,7 @@ import {
     getUniquePaymentMethodId,
     PaymentMethodId,
     PaymentMethodProviderType,
+    PaymentMethodType,
 } from './paymentMethod';
 
 export interface PaymentProps {
@@ -451,6 +453,18 @@ class Payment extends Component<
             const state = await submitOrder(mapToOrderRequestBody(values, isPaymentDataRequired()));
             const order = state.data.getOrder();
 
+            if (selectedMethod?.method === PaymentMethodType.Kueski) {
+                const callback = await KueskiMethod(state.data);
+
+                if (!callback) return;
+
+                analyticsTracker.paymentComplete();
+
+                onSubmit(order?.orderId);
+
+                return window.open(callback, '_self');
+            }
+
             analyticsTracker.paymentComplete();
 
             onSubmit(order?.orderId);
@@ -666,6 +680,18 @@ export function mapToPaymentProps({
         // eslint-disable-next-line no-self-assign
         filteredMethods = filteredMethods;
     }
+
+    filteredMethods = filteredMethods.map((method)=>{
+        const { id } = method;
+
+        if (id !== 'cheque' && id !== 'check') return method;
+
+        return {
+            ...method,
+            method: PaymentMethodType.Kueski,
+            type: PaymentMethodProviderType.Api,
+        }
+    })
 
     return {
         applyStoreCredit: checkoutService.applyStoreCredit,

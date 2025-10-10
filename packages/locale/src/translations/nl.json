@@ -306,6 +306,8 @@
             "payment_method_invalid_error": "Er is een probleem opgetreden bij het verwerken van uw betaling. Neem voor hulp contact met ons op of kies een andere betaalmethode.",
             "payment_method_unavailable_error": "Deze betalingsprovider is tijdelijk niet beschikbaar. Probeer het later opnieuw.",
             "payment_not_required_text": "Voor deze bestelling is geen betaling vereist.",
+            "kueski_complete_action": "Complete order",
+            "kueski_continue_action": "Continue with KueskiPay",
             "paypal_complete_action": "Bestelling voltooien",
             "paypal_continue_action": "Doorgaan met PayPal",
             "paypal_pay_later_complete_action": "Bestelling voltooien",

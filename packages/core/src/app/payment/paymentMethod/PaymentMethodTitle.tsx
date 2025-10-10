@@ -171,6 +171,11 @@ export function getPaymentMethodTitle(
                 logoUrl: 'https://masterpass.com/dyn/img/acc/global/mp_mark_hor_blk.svg',
                 titleText: '',
             },
+            [PaymentMethodType.Kueski]: {
+                // Esta url debe ser proporcionado por API
+                logoUrl: method.logoUrl || 'https://cococosmeticanatural.com.mx/wp-content/uploads/2021/08/Kueskipay.png',
+                titleText: methodDisplayName,
+            },
             [PaymentMethodType.Paypal]: {
                 // TODO: method.id === PaymentMethodId.BraintreeVenmo should be removed after the PAYPAL-1380.checkout_button_strategies_update experiment removal
                 logoUrl:
@@ -265,6 +270,16 @@ export function getPaymentMethodTitle(
 
         if (method.id === PaymentMethodId.PaypalCommerceVenmo) {
             return customTitles[PaymentMethodId.PaypalCommerceAlternativeMethod];
+        }
+
+        if (
+          method.gateway === PaymentMethodId.BigCommercePaymentsAlternativeMethod &&
+          method.id === PaymentMethodId.Klarna
+        ) {
+            return {
+                logoUrl: cdnPath('/img/payment-providers/klarna.png'),
+                titleText: methodDisplayName,
+            };
         }
 
         if (method.id === PaymentMethodId.BigCommercePaymentsVenmo) {

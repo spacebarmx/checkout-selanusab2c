@@ -306,6 +306,8 @@
             "payment_method_invalid_error": "Wystąpił problem z przetwarzaniem płatności. Skontaktuj się z nami w celu uzyskania pomocy lub wybierz inną metodę płatności.",
             "payment_method_unavailable_error": "Ten dostawca płatności jest chwilowo niedostępny. Prosimy spróbować ponownie później.",
             "payment_not_required_text": "Płatność nie jest wymagana w przypadku tego zamówienia.",
+            "kueski_complete_action": "Complete order",
+            "kueski_continue_action": "Continue with KueskiPay",
             "paypal_complete_action": "Kompletne zamówienie",
             "paypal_continue_action": "Kontynuuj korzystanie z systemu PayPal",
             "paypal_pay_later_complete_action": "Kompletne zamówienie",

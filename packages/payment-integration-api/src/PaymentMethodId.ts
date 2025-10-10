@@ -41,6 +41,7 @@ enum PaymentMethodId {
     Moneris = 'moneris',
     OrbitalGooglePay = 'googlepayorbital',
     Oxxo = 'oxxo',
+    KueskiCommerce = 'kueskicommerce',
     PaypalExpress = 'paypalexpress',
     PaypalPaymentsPro = 'paypal',
     PaypalCommerce = 'paypalcommerce',

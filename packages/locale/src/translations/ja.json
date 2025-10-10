@@ -306,6 +306,8 @@
             "payment_method_invalid_error": "お支払いの処理に問題があります。お問い合わせいただくか、他のお支払方法をお選びください。",
             "payment_method_unavailable_error": "この支払プロバイダは一時的に使用できません。しばらくたってからもう一度お試しください。",
             "payment_not_required_text": "この注文にはお支払いは必要ありません。",
+            "kueski_complete_action": "Complete order",
+            "kueski_continue_action": "Continue with KueskiPay",
             "paypal_complete_action": "注文を完了する",
             "paypal_continue_action": "PayPalで続ける",
             "paypal_pay_later_complete_action": "注文を完了する",

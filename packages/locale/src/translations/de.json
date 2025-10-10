@@ -306,6 +306,8 @@
             "payment_method_invalid_error": "Bei der Verarbeitung Ihrer Zahlung ist ein Fehler aufgetreten. Bitte kontaktieren Sie uns, um Hilfe zu erhalten, oder wählen Sie eine andere Zahlungsmethode.",
             "payment_method_unavailable_error": "Dieser Zahlungsdienstleister ist vorübergehend nicht verfügbar. Bitte versuchen Sie es später erneut.",
             "payment_not_required_text": "Für diese Bestellung ist keine Zahlung erforderlich.",
+            "kueski_complete_action": "Complete order",
+            "kueski_continue_action": "Continue with KueskiPay",
             "paypal_complete_action": "Bestellung abschließen",
             "paypal_continue_action": "Mit PayPal fortfahren",
             "paypal_pay_later_complete_action": "Bestellung abschließen",

@@ -8,16 +8,20 @@ import userEvent from '@testing-library/user-event';
 import { noop } from 'lodash';
 import React, { act, type FunctionComponent } from 'react';
 
+import { ExtensionService } from '@bigcommerce/checkout/checkout-extension';
 import {
     type AnalyticsContextProps,
     type AnalyticsEvents,
     AnalyticsProviderMock,
-} from '@bigcommerce/checkout/analytics';
-import { ExtensionProvider } from '@bigcommerce/checkout/checkout-extension';
-import { getLanguageService, LocaleProvider } from '@bigcommerce/checkout/locale';
+    CheckoutProvider,
+    ExtensionProvider,
+    type ExtensionServiceInterface,
+    LocaleProvider,
+    ThemeProvider,
+} from '@bigcommerce/checkout/contexts';
+import { getLanguageService } from '@bigcommerce/checkout/locale';
 import {
     CHECKOUT_ROOT_NODE_ID,
-    CheckoutProvider,
 } from '@bigcommerce/checkout/payment-integration-api';
 import {
     CheckoutPageNodeObject,
@@ -28,7 +32,6 @@ import {
     consignmentCouponDiscount,
 } from '@bigcommerce/checkout/test-framework';
 import { renderWithoutWrapper as render, screen, waitFor } from '@bigcommerce/checkout/test-utils';
-import { ThemeProvider } from '@bigcommerce/checkout/ui';
 
 import { createErrorLogger } from '../common/error';
 import {
@@ -42,6 +45,7 @@ describe('Checkout', () => {
     let checkout: CheckoutPageNodeObject;
     let CheckoutTest: FunctionComponent<CheckoutProps>;
     let checkoutService: CheckoutService;
+    let extensionService: ExtensionServiceInterface;
     let defaultProps: CheckoutProps & AnalyticsContextProps;
     let embeddedMessengerMock: EmbeddedCheckoutMessenger;
     let analyticsTracker: AnalyticsEvents;
@@ -63,6 +67,7 @@ describe('Checkout', () => {
         window.scrollTo = jest.fn();
 
         checkoutService = createCheckoutService();
+        extensionService = new ExtensionService(checkoutService, createErrorLogger());
         embeddedMessengerMock = createEmbeddedCheckoutMessenger({
             parentOrigin: 'https://store.url',
         });
@@ -97,9 +102,9 @@ describe('Checkout', () => {
 
         CheckoutTest = (props) => (
             <CheckoutProvider checkoutService={checkoutService}>
-                <LocaleProvider checkoutService={checkoutService}>
+                <LocaleProvider checkoutService={checkoutService} languageService={getLanguageService()}>
                     <AnalyticsProviderMock>
-                        <ExtensionProvider checkoutService={checkoutService} errorLogger={defaultProps.errorLogger}>
+                        <ExtensionProvider extensionService={extensionService}>
                             <ThemeProvider>
                                 <Checkout {...props} />
                             </ThemeProvider>
@@ -324,20 +329,6 @@ describe('Checkout', () => {
             expect(screen.getByText('test@example.com')).toBeInTheDocument();
         });
 
-        it('logs unhandled error', async () => {
-            checkoutService = checkout.use(CheckoutPreset.UnsupportedProvider);
-
-            render(<CheckoutTest {...defaultProps} />);
-
-            await checkout.waitForCustomerStep();
-
-            const error = new Error(
-                'Unable to proceed because payment method data is unavailable or not properly configured.',
-            );
-
-            expect(defaultProps.errorLogger.log).toHaveBeenCalledWith(error);
-        });
-
         it('renders checkout button container with ApplePay', async () => {
             (window as any).ApplePaySession = {};
 
@@ -539,17 +530,19 @@ describe('Checkout', () => {
         it('logs unhandled error', async () => {
             const error = new Error();
 
+            checkoutService = checkout.use(CheckoutPreset.CheckoutWithShipping);
+
             jest.spyOn(checkoutService, 'loadBillingAddressFields').mockImplementation(() => {
                 throw error;
             });
-
-            checkoutService = checkout.use(CheckoutPreset.CheckoutWithShipping);
 
             render(<CheckoutTest {...defaultProps} />);
 
             await checkout.waitForBillingStep();
 
-            expect(defaultProps.errorLogger.log).toHaveBeenCalledWith(error);
+            await waitFor(()=>{
+                expect(defaultProps.errorLogger.log).toHaveBeenCalledWith(error);
+            });
         });
     });
 
@@ -566,7 +559,7 @@ describe('Checkout', () => {
             expect(screen.getByText(/place order/i)).toBeInTheDocument();
         });
 
-        it.only('logs unhandled error', async () => {
+        it('logs unhandled error', async () => {
             const error = new Error();
 
             checkoutService = checkout.use(CheckoutPreset.CheckoutWithShippingAndBilling);

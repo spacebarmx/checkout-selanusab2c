@@ -28,8 +28,8 @@ import {
     isInstrumentFeatureAvailable,
     StoreInstrumentFieldset,
 } from '@bigcommerce/checkout/instrument-utils';
-import { createLocaleContext, LocaleContext } from '@bigcommerce/checkout/locale';
 import {
+    CaptureMessageComponent,
     type CardInstrumentFieldsetValues,
     type PaymentMethodProps,
 } from '@bigcommerce/checkout/payment-integration-api';
@@ -357,58 +357,59 @@ export const CreditCardPaymentMethodComponent = (
 
     const storeConfig = getStoreConfig();
 
+    const SentryMessage = methodProp ? `DataCreditCardFieldset ${JSON.stringify(methodProp)}` : '';
+
     if (!storeConfig) {
         throw Error('Unable to get config or customer');
     }
 
     return (
-        <LocaleContext.Provider value={createLocaleContext(storeConfig)}>
-            <LoadingOverlay hideContentWhenLoading isLoading={isLoading}>
-                <div
-                    className="paymentMethod paymentMethod--creditCard"
-                    data-test="credit-cart-payment-method"
-                >
-                    {shouldShowInstrumentFieldset && (
-                        <CardInstrumentFieldset
-                            instruments={outerInstruments}
-                            onDeleteInstrument={handleDeleteInstrument}
-                            onSelectInstrument={handleSelectInstrument}
-                            onUseNewInstrument={handleUseNewCard}
-                            selectedInstrumentId={
-                                selectedInstrument && selectedInstrument.bigpayToken
-                            }
-                            validateInstrument={
-                                getStoredCardValidationFieldset ? (
-                                    getStoredCardValidationFieldset(selectedInstrument)
-                                ) : (
-                                    <CreditCardValidation
-                                        shouldShowCardCodeField={shouldShowCardCodeField}
-                                        shouldShowNumberField={shouldShowNumberField}
-                                    />
-                                )
-                            }
-                        />
-                    )}
+        <LoadingOverlay hideContentWhenLoading isLoading={isLoading}>
+            <div
+                className="paymentMethod paymentMethod--creditCard"
+                data-test="credit-cart-payment-method"
+            >
+                {shouldShowInstrumentFieldset && (
+                    <CardInstrumentFieldset
+                        instruments={outerInstruments}
+                        onDeleteInstrument={handleDeleteInstrument}
+                        onSelectInstrument={handleSelectInstrument}
+                        onUseNewInstrument={handleUseNewCard}
+                        selectedInstrumentId={selectedInstrument && selectedInstrument.bigpayToken}
+                        validateInstrument={
+                            getStoredCardValidationFieldset ? (
+                                getStoredCardValidationFieldset(selectedInstrument)
+                            ) : (
+                                <CreditCardValidation
+                                    shouldShowCardCodeField={shouldShowCardCodeField}
+                                    shouldShowNumberField={shouldShowNumberField}
+                                />
+                            )
+                        }
+                    />
+                )}
 
-                    {shouldShowCreditCardFieldset && !cardFieldset && (
+                {shouldShowCreditCardFieldset && !cardFieldset && (
+                    <>
+                        <CaptureMessageComponent message={SentryMessage} />
                         <CreditCardFieldset
                             shouldShowCardCodeField={
                                 methodProp.config.cardCode || methodProp.config.cardCode === null
                             }
                             shouldShowCustomerCodeField={methodProp.config.requireCustomerCode}
                         />
-                    )}
+                    </>
+                )}
 
-                    {shouldShowCreditCardFieldset && cardFieldset}
+                {shouldShowCreditCardFieldset && cardFieldset}
 
-                    {isInstrumentFeatureAvailableProp && (
-                        <StoreInstrumentFieldset
-                            instrumentId={selectedInstrument && selectedInstrument.bigpayToken}
-                            instruments={outerInstruments}
-                        />
-                    )}
-                </div>
-            </LoadingOverlay>
-        </LocaleContext.Provider>
+                {isInstrumentFeatureAvailableProp && (
+                    <StoreInstrumentFieldset
+                        instrumentId={selectedInstrument && selectedInstrument.bigpayToken}
+                        instruments={outerInstruments}
+                    />
+                )}
+            </div>
+        </LoadingOverlay>
     );
 };

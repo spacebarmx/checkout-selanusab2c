@@ -395,11 +395,10 @@ const Payment= (props: PaymentProps & WithCheckoutPaymentProps & WithLanguagePro
             },
         }));
     };
-    private setRequireBill: () => void = () => {
-
-        this.setState({
-            requireBill:!this.state.requireBill
-        });
+    const setRequireBill: () => void = () => {
+        setState(prevState => ({ ...prevState,
+            requireBill: !state.requireBill,
+        }));
     };
     const setValidationSchema = (
         method: PaymentMethod,
@@ -521,7 +520,7 @@ const Payment= (props: PaymentProps & WithCheckoutPaymentProps & WithLanguagePro
         checkEmbeddedSupport(methods.map(({ id }) => id));
     }, [props.methods]);
 
-    const { selectedMethod = props.defaultMethod } = state;
+    const { selectedMethod = props.defaultMethod, requireBill } = state;
     const uniqueSelectedMethodId =
         selectedMethod && getUniquePaymentMethodId(selectedMethod.id, selectedMethod.gateway);
 
@@ -545,7 +544,9 @@ const Payment= (props: PaymentProps & WithCheckoutPaymentProps & WithLanguagePro
                         onStoreCreditChange={handleStoreCreditChange}
                         onSubmit={handleSubmit}
                         onUnhandledError={handleError}
+                        requireBill={requireBill}
                         selectedMethod={state.selectedMethod}
+                        setRequireBill={setRequireBill}
                         shouldDisableSubmit={(uniqueSelectedMethodId && state.shouldDisableSubmit[uniqueSelectedMethodId]) || undefined}
                         shouldExecuteSpamCheck = {props.shouldExecuteSpamCheck}
                         shouldHidePaymentSubmitButton={(uniqueSelectedMethodId && props.isPaymentDataRequired() && state.shouldHidePaymentSubmitButton[uniqueSelectedMethodId]) || undefined}

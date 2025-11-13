@@ -7,14 +7,9 @@ import {
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
-import { ExtensionProvider } from '@bigcommerce/checkout/checkout-extension';
-import { type ErrorLogger } from '@bigcommerce/checkout/error-handling-utils';
-import {
-    createLocaleContext,
-    LocaleContext,
-    type LocaleContextType,
-} from '@bigcommerce/checkout/locale';
-import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
+import { ExtensionService } from '@bigcommerce/checkout/checkout-extension';
+import { CheckoutProvider, ExtensionProvider ,type ExtensionServiceInterface, LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { render, screen, waitFor, within } from '@bigcommerce/checkout/test-utils';
 
 import { getAddressFormFields } from '../address/formField.mock';
@@ -33,25 +28,24 @@ import { getShippingAddress } from './shipping-addresses.mock';
 
 describe('MultiShippingForm Component', () => {
     let checkoutService: CheckoutService;
+    let extensionService: ExtensionServiceInterface;
     let checkoutState: CheckoutSelectors;
     let defaultProps: MultiShippingFormProps;
     let localeContext: LocaleContextType;
-    let errorLogger: ErrorLogger;
 
     beforeEach(() => {
         localeContext = createLocaleContext(getStoreConfig());
         checkoutService = createCheckoutService();
+        extensionService = new ExtensionService(checkoutService, createErrorLogger());
         checkoutState = checkoutService.getState();
 
         defaultProps = {
+            cartHasChanged: false,
             customerMessage: 'x',
-            countriesWithAutocomplete: [],
             isLoading: false,
             onUnhandledError: jest.fn(),
-            onSubmit: jest.fn(),
+            onSubmit: jest.fn()
         };
-
-        errorLogger = createErrorLogger();
 
         jest.spyOn(checkoutState.data, 'getBillingAddressFields').mockReturnValue(
             getAddressFormFields(),
@@ -90,7 +84,7 @@ describe('MultiShippingForm Component', () => {
         render(
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
-                    <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger} >
+                    <ExtensionProvider extensionService={extensionService}>
                         <MultiShippingForm {...defaultProps} />
                     </ExtensionProvider>
                 </LocaleContext.Provider>
@@ -122,7 +116,7 @@ describe('MultiShippingForm Component', () => {
         render(
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
-                    <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger} >
+                    <ExtensionProvider extensionService={extensionService}>
                         <MultiShippingForm {...defaultProps} />
                     </ExtensionProvider>
                 </LocaleContext.Provider>
@@ -170,7 +164,7 @@ describe('MultiShippingForm Component', () => {
         render(
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
-                    <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger} >
+                    <ExtensionProvider extensionService={extensionService}>
                         <MultiShippingForm {...defaultProps} />
                     </ExtensionProvider>
                 </LocaleContext.Provider>
@@ -187,7 +181,7 @@ describe('MultiShippingForm Component', () => {
         render(
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
-                    <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger} >
+                    <ExtensionProvider extensionService={extensionService}>
                         <MultiShippingForm {...defaultProps} />
                     </ExtensionProvider>
                 </LocaleContext.Provider>
@@ -246,7 +240,7 @@ describe('MultiShippingForm Component', () => {
         render(
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
-                    <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger} >
+                    <ExtensionProvider extensionService={extensionService}>
                         <MultiShippingForm {...defaultProps} />
                     </ExtensionProvider>
                 </LocaleContext.Provider>
@@ -372,7 +366,7 @@ describe('MultiShippingForm Component', () => {
         render(
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
-                    <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger} >
+                    <ExtensionProvider extensionService={extensionService}>
                         <MultiShippingForm {...defaultProps} />
                     </ExtensionProvider>
                 </LocaleContext.Provider>
@@ -458,7 +452,7 @@ describe('MultiShippingForm Component', () => {
         render(
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
-                    <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger} >
+                    <ExtensionProvider extensionService={extensionService}>
                         <MultiShippingForm {...defaultProps} />
                     </ExtensionProvider>
                 </LocaleContext.Provider>
@@ -503,7 +497,7 @@ describe('MultiShippingForm Component', () => {
         render(
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
-                    <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger} >
+                    <ExtensionProvider extensionService={extensionService}>
                         <MultiShippingForm {...defaultProps} />
                     </ExtensionProvider>
                 </LocaleContext.Provider>
@@ -554,7 +548,7 @@ describe('MultiShippingForm Component', () => {
         render(
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
-                    <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger} >
+                    <ExtensionProvider extensionService={extensionService}>
                         <MultiShippingForm {...defaultProps} />
                     </ExtensionProvider>
                 </LocaleContext.Provider>
@@ -621,7 +615,7 @@ describe('MultiShippingForm Component', () => {
         render(
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
-                    <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger} >
+                    <ExtensionProvider extensionService={extensionService}>
                         <MultiShippingForm {...defaultProps} />
                     </ExtensionProvider>
                 </LocaleContext.Provider>
@@ -684,7 +678,7 @@ describe('MultiShippingForm Component', () => {
         render(
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
-                    <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger} >
+                    <ExtensionProvider extensionService={extensionService}>
                         <MultiShippingForm {...defaultProps} />
                     </ExtensionProvider>
                 </LocaleContext.Provider>
@@ -741,7 +735,7 @@ describe('MultiShippingForm Component', () => {
         render(
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
-                    <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger} >
+                    <ExtensionProvider extensionService={extensionService}>
                         <MultiShippingForm {...defaultProps} />
                     </ExtensionProvider>
                 </LocaleContext.Provider>

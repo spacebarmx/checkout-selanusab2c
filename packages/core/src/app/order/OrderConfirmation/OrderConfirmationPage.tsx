@@ -20,6 +20,7 @@ import {
 } from '../../guestSignup';
 import OrderConfirmationSection from '../OrderConfirmationSection';
 import OrderStatus from '../OrderStatus';
+import StatusHeader from '../StatusHeader';
 import ThankYouHeader from '../ThankYouHeader';
 
 import { ContinueButton } from './ContinueButton';
@@ -66,57 +67,76 @@ export const OrderConfirmationPage = ({
 }: OrderConfirmationPageProps): ReactElement => (
     <div
         className={classNames('layout optimizedCheckout-contentPrimary', {
-            'is-embedded': isEmbedded(),
+        'is-embedded': isEmbedded(),
         })}
     >
-        <div className="layout-main">
+        {order.status === 'DECLINED' ? (
             <div className="orderConfirmation">
-                <ThankYouHeader name={order.billingAddress.firstName} />
-                <OrderStatus
-                    config={config}
-                    order={order}
-                    supportEmail={supportEmail}
-                    supportPhoneNumber={supportPhoneNumber}
-                />
-                {paymentInstructions && (
-                    <OrderConfirmationSection>
+                <OrderConfirmationSection>
+                    <StatusHeader status='rechazada' />
+                    <p>Lamentamos informarle que la transacción no pudo completarse.</p>
+                    <p>Para conocer los detalles del rechazo y los próximos pasos, por favor, consulta el estado de tu solicitud directamente en tu cuenta de Kueski o comunícate con su soporte.</p>
+                    <p>Puedes intentar con otra forma de pago (de momento no disponible)</p>
+                    <ContinueButton siteLink={siteLink} />
+                </OrderConfirmationSection>
+            </div>
+        ) : order.status === 'CANCELLED' ? (
+            <div className="orderConfirmation">
+                <OrderConfirmationSection>
+                    <StatusHeader status='cancelada' />
+                    <p>Lamentamos informarle que la transacción no pudo completarse.</p>
+                    <p>Para conocer los detalles de la cancelación y los próximos pasos, por favor, consulta el estado de tu solicitud directamente en tu cuenta de Kueski o comunícate con su soporte.</p>
+                    <p>Puedes intentar con otra forma de pago (de momento no disponible)</p>
+                    <ContinueButton siteLink={siteLink} />
+                </OrderConfirmationSection>
+            </div>
+        ) : (
+            <div className="layout-main">
+                <div className="orderConfirmation">
+                    <ThankYouHeader name={order.billingAddress.firstName} />
+                    <OrderStatus
+                        config={config}
+                        order={order}
+                        supportEmail={supportEmail}
+                        supportPhoneNumber={supportPhoneNumber}
+                    />
+                    {paymentInstructions && (
+                        <OrderConfirmationSection>
                         <div
                             dangerouslySetInnerHTML={{
                                 __html: DOMPurify.sanitize(paymentInstructions),
                             }}
                             data-test="payment-instructions"
                         />
-                    </OrderConfirmationSection>
-                )}
+                        </OrderConfirmationSection>
+                    )}
 
-                {shouldShowPasswordForm && !hasSignedUp && (
-                    <GuestSignUpForm
-                        customerCanBeCreated={customerCanBeCreated}
-                        isSigningUp={isSigningUp}
-                        onSignUp={onSignUp}
-                        passwordRequirements={getPasswordRequirementsFromConfig(shopperConfig)}
-                    />
-                )}
+                    {shouldShowPasswordForm && !hasSignedUp && (
+                        <GuestSignUpForm
+                            customerCanBeCreated={customerCanBeCreated}
+                            isSigningUp={isSigningUp}
+                            onSignUp={onSignUp}
+                            passwordRequirements={getPasswordRequirementsFromConfig(shopperConfig)}
+                        />
+                    )}
 
-                {hasSignedUp &&
-                    (order?.customerId ? (
-                        <PasswordSavedSuccessAlert />
-                    ) : (
-                        <SignedUpSuccessAlert />
-                    ))}
+                    {hasSignedUp &&
+                        (order?.customerId ? <PasswordSavedSuccessAlert /> : <SignedUpSuccessAlert />)}
 
-                <ContinueButton siteLink={siteLink} />
+                    <ContinueButton siteLink={siteLink} />
+                </div>
             </div>
-        </div>
+        )}
 
-        <OrderSummaryContainer
-            currency={currency}
-            isShippingDiscountDisplayEnabled={isShippingDiscountDisplayEnabled}
-            order={order}
-            shopperCurrency={shopperCurrency}
-        />
+        {order.status !== 'DECLINED' && order.status !== 'CANCELLED' && (
+            <OrderSummaryContainer
+                currency={currency}
+                isShippingDiscountDisplayEnabled={isShippingDiscountDisplayEnabled}
+                order={order}
+                shopperCurrency={shopperCurrency}
+            />
+        )}
 
         <ErrorModal error={error} onClose={onErrorModalClose} shouldShowErrorCode={false} />
     </div>
 );
-

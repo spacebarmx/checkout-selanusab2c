@@ -25,6 +25,7 @@ const {
     getNextVersion,
     mergeManifests,
     transformManifest,
+    transformLoaderManifest,
 } = require('./scripts/webpack');
 
 const env = dotenv.config().parsed;
@@ -200,6 +201,8 @@ function appConfig(options, argv) {
                         test: /app\/polyfill\.ts$/,
                         include: [
                             join(__dirname, 'packages', 'core', 'src'),
+                            join(__dirname, 'packages', 'contexts', 'src'),
+                            join(__dirname, 'packages', 'payment-integration-api', 'src'),
                             join(__dirname, 'packages', 'locale', 'src'),
                             join(__dirname, 'packages', 'test-mocks', 'src'),
                         ],
@@ -310,6 +313,7 @@ function loaderConfig(options, argv) {
                 filename: `[name]-${appVersion}.js`,
                 library: LOADER_LIBRARY_NAME,
                 crossOriginLoading: 'anonymous',
+                publicPath: '/',
             },
             plugins: [
                 new SubresourceIntegrityPlugin({
@@ -322,16 +326,18 @@ function loaderConfig(options, argv) {
 
                         eventEmitter.on('app:done', () => {
                             if (!wasTriggeredBefore) {
+                                const MANIFEST_JSON = transformLoaderManifest(
+                                    join(
+                                        __dirname,
+                                        isProduction ? 'dist' : 'build',
+                                        `manifest-app-${appVersion}.json`,
+                                    ),
+                                    PRELOAD_ASSETS,
+                                );
+
                                 const definePlugin = new DefinePlugin({
                                     LIBRARY_NAME: JSON.stringify(LIBRARY_NAME),
-                                    PRELOAD_ASSETS: JSON.stringify(PRELOAD_ASSETS),
-                                    MANIFEST_JSON: JSON.stringify(
-                                        require(join(
-                                            __dirname,
-                                            isProduction ? 'dist' : 'build',
-                                            `manifest-app-${appVersion}.json`,
-                                        )),
-                                    ),
+                                    MANIFEST_JSON: JSON.stringify(MANIFEST_JSON),
                                 });
 
                                 definePlugin.apply(compiler);
@@ -403,6 +409,8 @@ function loaderConfig(options, argv) {
                         test: /\.tsx?$/,
                         include: [
                             join(__dirname, 'packages', 'core', 'src'),
+                            join(__dirname, 'packages', 'contexts', 'src'),
+                            join(__dirname, 'packages', 'payment-integration-api', 'src'), // remove when checkout context is relocated
                             join(__dirname, 'packages', 'dom-utils', 'src'),
                             join(__dirname, 'packages', 'legacy-hoc', 'src'),
                             join(__dirname, 'packages', 'locale', 'src'),

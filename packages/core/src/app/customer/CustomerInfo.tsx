@@ -3,9 +3,8 @@ import classNames from 'classnames';
 import { noop } from 'lodash';
 import React, { type FunctionComponent } from 'react';
 
+import { type CheckoutContextProps, useThemeContext } from '@bigcommerce/checkout/contexts';
 import { TranslatedString } from '@bigcommerce/checkout/locale';
-import { type CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
-import { useThemeContext } from '@bigcommerce/checkout/ui';
 
 import { withCheckout } from '../checkout';
 import { isErrorWithType } from '../common/error';

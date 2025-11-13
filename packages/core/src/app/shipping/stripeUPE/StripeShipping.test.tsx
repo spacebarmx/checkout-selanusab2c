@@ -4,10 +4,9 @@ import {
 } from '@bigcommerce/checkout-sdk';
 import React from 'react';
 
-import { type AnalyticsEvents, AnalyticsProviderMock } from '@bigcommerce/checkout/analytics';
-import { ExtensionProvider } from '@bigcommerce/checkout/checkout-extension';
-import { LocaleProvider } from '@bigcommerce/checkout/locale';
-import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
+import { ExtensionService } from '@bigcommerce/checkout/checkout-extension';
+import { type AnalyticsEvents, AnalyticsProviderMock, CheckoutProvider, ExtensionProvider, LocaleProvider } from '@bigcommerce/checkout/contexts';
+import { getLanguageService } from '@bigcommerce/checkout/locale';
 import { render } from '@bigcommerce/checkout/test-utils';
 
 import { getCart } from '../../cart/carts.mock';
@@ -16,13 +15,13 @@ import CheckoutStepType from '../../checkout/CheckoutStepType';
 import ConsoleErrorLogger from '../../common/error/ConsoleErrorLogger';
 import { getStoreConfig } from '../../config/config.mock';
 import { getCustomer } from '../../customer/customers.mock';
-import { getShippingAddress } from '../shipping-addresses.mock';
 
 import StripeShipping, { type StripeShippingProps } from './StripeShipping';
 
 describe('Stripe Shipping Component', () => {
     const checkoutService = createCheckoutService();
     const errorLogger = new ConsoleErrorLogger();
+    const extensionService = new ExtensionService(checkoutService, errorLogger);
     const initialize = jest.fn();
     let checkoutState: CheckoutSelectors;
     let analyticsTracker: Partial<AnalyticsEvents>;
@@ -30,6 +29,7 @@ describe('Stripe Shipping Component', () => {
    checkoutService.initializeShipping = initialize;
 
   const defaultProps: StripeShippingProps = {
+        isInitializing: false,
         step: {
             isActive: true,
             isBusy: false,
@@ -65,9 +65,12 @@ describe('Stripe Shipping Component', () => {
     it('loads shipping data  when component is mounted', async () => {
       const { container } = render(
         <CheckoutProvider checkoutService={checkoutService}>
-          <LocaleProvider checkoutService={checkoutService}>
+            <LocaleProvider
+                checkoutService={checkoutService}
+                languageService={getLanguageService()}
+            >
             <AnalyticsProviderMock analyticsTracker={analyticsTracker}>
-              <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger}>
+                <ExtensionProvider extensionService={extensionService}>
                 <StripeShipping {...defaultProps} />
               </ExtensionProvider>
             </AnalyticsProviderMock>

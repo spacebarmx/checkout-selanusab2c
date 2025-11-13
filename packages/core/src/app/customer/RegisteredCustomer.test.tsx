@@ -1,10 +1,5 @@
 import '@testing-library/jest-dom';
 
-import { AnalyticsProviderMock } from '@bigcommerce/checkout/analytics';
-import { createLocaleContext, LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/locale';
-import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
-import { getCart, getCheckout, getStoreConfig } from '@bigcommerce/checkout/test-mocks';
-import { render, screen, within } from '@bigcommerce/checkout/test-utils';
 import {
     type Cart,
     type Checkout,
@@ -16,6 +11,11 @@ import {
 import { faker } from '@faker-js/faker';
 import userEvent from '@testing-library/user-event';
 import React, { type FunctionComponent } from 'react';
+
+import { AnalyticsProviderMock, CheckoutProvider, LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
+import { getCart, getCheckout, getStoreConfig } from '@bigcommerce/checkout/test-mocks';
+import { render, screen, within } from '@bigcommerce/checkout/test-utils';
 
 import CheckoutStepType from '../checkout/CheckoutStepType';
 
@@ -431,7 +431,7 @@ describe('Registered Customer', () => {
 
         jest.spyOn(checkoutService.getState().data, 'getCheckout').mockReturnValue(buyNowCheckout);
 
-        render(<CustomerTest viewType={CustomerViewType.Login} {...defaultProps} />);    
+        render(<CustomerTest viewType={CustomerViewType.Login} {...defaultProps} />);
 
         expect(screen.queryByText(localeContext.language.translate('login_email.link'))).not.toBeInTheDocument();
     });

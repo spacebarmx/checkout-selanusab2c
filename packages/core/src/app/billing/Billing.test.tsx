@@ -9,16 +9,18 @@ import userEvent from '@testing-library/user-event';
 import { noop } from 'lodash';
 import React, { type FunctionComponent } from 'react';
 
+import { ExtensionService } from '@bigcommerce/checkout/checkout-extension';
 import {
-    type AnalyticsContextProps,
-    type AnalyticsEvents,
     AnalyticsProviderMock,
-} from '@bigcommerce/checkout/analytics';
-import { ExtensionProvider } from '@bigcommerce/checkout/checkout-extension';
-import { getLanguageService, LocaleProvider } from '@bigcommerce/checkout/locale';
+    CheckoutProvider,
+    ExtensionProvider,
+    type ExtensionServiceInterface,
+    LocaleProvider,
+    ThemeProvider,
+} from '@bigcommerce/checkout/contexts';
+import { getLanguageService } from '@bigcommerce/checkout/locale';
 import {
     CHECKOUT_ROOT_NODE_ID,
-    CheckoutProvider,
 } from '@bigcommerce/checkout/payment-integration-api';
 import {
     CheckoutPageNodeObject,
@@ -37,10 +39,9 @@ import {
     shippingAddress3,
 } from '@bigcommerce/checkout/test-framework';
 import { act, renderWithoutWrapper as render, screen } from '@bigcommerce/checkout/test-utils';
-import { ThemeProvider } from '@bigcommerce/checkout/ui';
 
 import Checkout from '../checkout/Checkout';
-import { type CheckoutIntermediateProps } from '../checkout/CheckoutIntermediate';
+import { type CheckoutInitializerProps } from '../checkout/CheckoutInitializer';
 import { getCheckoutPayment } from '../checkout/checkouts.mock';
 import { createErrorLogger } from '../common/error';
 import {
@@ -50,11 +51,11 @@ import {
 
 describe('Billing step', () => {
     let checkout: CheckoutPageNodeObject;
-    let CheckoutTest: FunctionComponent<CheckoutIntermediateProps>;
+    let CheckoutTest: FunctionComponent<CheckoutInitializerProps>;
     let checkoutService: CheckoutService;
-    let defaultProps: CheckoutIntermediateProps & AnalyticsContextProps;
+    let extensionService: ExtensionServiceInterface;
+    let defaultProps: CheckoutInitializerProps;
     let embeddedMessengerMock: EmbeddedCheckoutMessenger;
-    let analyticsTracker: Partial<AnalyticsEvents>;
 
     const checkoutWithCustomer = {
         ...checkoutWithShipping,
@@ -76,34 +77,30 @@ describe('Billing step', () => {
     });
 
     beforeEach(() => {
+        const errorLogger = createErrorLogger();
+
         window.scrollTo = jest.fn();
 
         checkoutService = createCheckoutService();
         embeddedMessengerMock = createEmbeddedCheckoutMessenger({
             parentOrigin: 'https://store.url',
         });
-        analyticsTracker = {
-            checkoutBegin: jest.fn(),
-            trackStepViewed: jest.fn(),
-            trackStepCompleted: jest.fn(),
-            exitCheckout: jest.fn(),
-        };
         defaultProps = {
             checkoutId: 'x',
             containerId: CHECKOUT_ROOT_NODE_ID,
             createEmbeddedMessenger: () => embeddedMessengerMock,
             embeddedStylesheet: createEmbeddedCheckoutStylesheet(),
             embeddedSupport: createEmbeddedCheckoutSupport(getLanguageService()),
-            errorLogger: createErrorLogger(),
-            analyticsTracker,
+            errorLogger,
         };
+        extensionService = new ExtensionService(checkoutService, errorLogger);
 
         jest.spyOn(defaultProps.errorLogger, 'log').mockImplementation(noop);
         jest.spyOn(checkoutService, 'updateBillingAddress');
 
         jest.mock('lodash', () => ({
             ...jest.requireActual('lodash'),
-            debounce: (fn) => {
+            debounce: (fn: any) => {
                 fn.cancel = jest.fn();
 
                 return fn;
@@ -112,14 +109,12 @@ describe('Billing step', () => {
 
         CheckoutTest = (props) => (
             <CheckoutProvider checkoutService={checkoutService}>
-                <LocaleProvider checkoutService={checkoutService}>
+                <LocaleProvider
+                    checkoutService={checkoutService}
+                    languageService={getLanguageService()}
+                >
                     <AnalyticsProviderMock>
-                        <ExtensionProvider
-                            checkoutService={checkoutService}
-                            errorLogger={{
-                                log: jest.fn(),
-                            }}
-                        >
+                        <ExtensionProvider extensionService={extensionService}>
                             <ThemeProvider>
                                 <Checkout {...props} />
                             </ThemeProvider>

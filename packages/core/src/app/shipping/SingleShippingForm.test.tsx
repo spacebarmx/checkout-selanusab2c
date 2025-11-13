@@ -2,12 +2,13 @@ import { createCheckoutService } from '@bigcommerce/checkout-sdk';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
-import { ExtensionProvider } from '@bigcommerce/checkout/checkout-extension';
-import { createLocaleContext, LocaleContext } from '@bigcommerce/checkout/locale';
-import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
+import { ExtensionService } from '@bigcommerce/checkout/checkout-extension';
+import { CheckoutProvider, ExtensionProvider, LocaleContext } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getAddressFormFields } from '../address/formField.mock';
+import { createErrorLogger } from '../common/error';
 import { getStoreConfig } from '../config/config.mock';
 
 import { getShippingAddress } from './shipping-addresses.mock';
@@ -15,15 +16,13 @@ import SingleShippingForm, { type SingleShippingFormProps } from './SingleShippi
 
 describe('SingleShippingForm', () => {
     const checkoutService = createCheckoutService();
+    const extensionService = new ExtensionService(checkoutService, createErrorLogger());
     const addressFormFields = getAddressFormFields().filter(({ custom }) => !custom);
 
     const defaultProps: SingleShippingFormProps = {
         isMultiShippingMode: false,
-        countries: [],
-        countriesWithAutocomplete: [],
         shippingAddress: getShippingAddress(),
         customerMessage: '',
-        addresses: [],
         shouldShowOrderComments: true,
         consignments: [],
         cartHasChanged: false,
@@ -51,7 +50,7 @@ describe('SingleShippingForm', () => {
         return (
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
-                    <ExtensionProvider checkoutService={checkoutService}>
+                    <ExtensionProvider extensionService={extensionService}>
                         <SingleShippingForm
                             {...defaultProps}
                             {...props}

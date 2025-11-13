@@ -3,12 +3,10 @@ import type { BrowserOptions } from '@sentry/browser';
 import React, { type ReactElement, useEffect, useMemo } from 'react';
 import ReactModal from 'react-modal';
 
-import { AnalyticsProvider } from '@bigcommerce/checkout/analytics';
-import { ExtensionProvider } from '@bigcommerce/checkout/checkout-extension';
+import { ExtensionService } from '@bigcommerce/checkout/checkout-extension';
+import { AnalyticsProvider, CheckoutProvider, ExtensionProvider, LocaleProvider, ThemeProvider } from '@bigcommerce/checkout/contexts';
 import { ErrorBoundary } from '@bigcommerce/checkout/error-handling-utils';
-import { getLanguageService, LocaleProvider } from '@bigcommerce/checkout/locale';
-import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
-import { ThemeProvider } from '@bigcommerce/checkout/ui';
+import { getLanguageService } from '@bigcommerce/checkout/locale';
 
 import '../../scss/App.scss';
 
@@ -40,11 +38,13 @@ const CheckoutApp = (props: CheckoutAppProps): ReactElement => {
             sampleRate: sentrySampleRate || 0.1,
         },
     ), []);
+    const languageService = useMemo(() => getLanguageService(), []);
     const checkoutService = useMemo(() => createCheckoutService({
-        locale: getLanguageService().getLocale(),
+        locale: languageService.getLocale(),
         shouldWarnMutation: process.env.NODE_ENV === 'development',
         errorLogger,
     }), []);
+    const extensionService = useMemo(() => new ExtensionService(checkoutService, errorLogger), []);
     const embeddedStylesheet = useMemo(() => createEmbeddedCheckoutStylesheet(), []);
     const embeddedSupport = useMemo(() => createEmbeddedCheckoutSupport(getLanguageService()), []);
 
@@ -53,14 +53,11 @@ const CheckoutApp = (props: CheckoutAppProps): ReactElement => {
     }, []);
 
     return (
-        <ErrorBoundary logger={errorLogger}>
-            <LocaleProvider checkoutService={checkoutService}>
-                <CheckoutProvider checkoutService={checkoutService}>
+        <ErrorBoundary errorLogger={errorLogger}>
+            <LocaleProvider checkoutService={checkoutService} languageService={languageService}>
+                <CheckoutProvider checkoutService={checkoutService} errorLogger={errorLogger}>
                     <AnalyticsProvider checkoutService={checkoutService}>
-                        <ExtensionProvider
-                            checkoutService={checkoutService}
-                            errorLogger={createErrorLogger()}
-                        >
+                        <ExtensionProvider extensionService={extensionService}>
                             <ThemeProvider>
                                 <Checkout
                                     {...props}

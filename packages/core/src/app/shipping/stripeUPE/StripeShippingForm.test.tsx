@@ -6,9 +6,9 @@ import {
 import userEvent from '@testing-library/user-event';
 import React, { act } from 'react';
 
-import { ExtensionProvider } from '@bigcommerce/checkout/checkout-extension';
-import { createLocaleContext, LocaleContext } from '@bigcommerce/checkout/locale';
-import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
+import { ExtensionService } from '@bigcommerce/checkout/checkout-extension';
+import { CheckoutProvider, ExtensionProvider, LocaleContext } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getAddressFormFields } from '../../address/formField.mock';
@@ -32,6 +32,7 @@ describe('StripeShippingForm', () => {
     const addressFormFields = getAddressFormFields().filter(({ custom }) => !custom);
     const checkoutService = createCheckoutService();
     const errorLogger = new ConsoleErrorLogger();
+    const extensionService = new ExtensionService(checkoutService, errorLogger);
     const { customFields, ...rest } = getShippingAddress();
     const localeContext = createLocaleContext(getStoreConfig());
     let checkoutState: CheckoutSelectors;
@@ -73,7 +74,7 @@ describe('StripeShippingForm', () => {
    const renderContainer = (props = {}) => render(
      <CheckoutProvider checkoutService={checkoutService}>
          <LocaleContext.Provider value={localeContext}>
-             <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger}>
+             <ExtensionProvider extensionService={extensionService}>
                  <StripeShippingForm {...defaultProps} {...props} />
              </ExtensionProvider>
          </LocaleContext.Provider>
